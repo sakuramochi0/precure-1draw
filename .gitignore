@@ -1,0 +1,8 @@
+*.bak
+*credentials
+*admin*
+*pycache*
+\#*
+*flymake*
+img
+html
