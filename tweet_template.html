@@ -6,7 +6,11 @@
   <div class="cards-base cards-multimedia customisable-border" data-scribe="component:card">
   <div class="media">
     
-        <a class="photo-link  box-0" target="_blank" href="https://twitter.com/{screen_name}/statuses/{id}" data-scribe="element:photo"><img class="illust" src="{img_src}" data-crop-x="0" data-crop-y="37" data-image-index="0" title="ツイートを見る" style="{img_style}"></a>
+        <a class="photo-link  box-0" target="_blank" href="https://twitter.com/{screen_name}/statuses/{id}" data-scribe="element:photo">
+
+	  <!-- illust -->
+	  <img class="illust" src="{img_src}" data-crop-x="0" data-crop-y="37" data-image-index="0" title="ツイートを見る" style="{img_style}"></a>
+	
   </div>
 </div>
 
@@ -51,7 +55,7 @@
 </span>
       <ul class="tweet-actions" role="menu" aria-label="Tweet actions" data-scribe="component:actions">
   {tweet_admin}
-  <li><a href="report.py?id={id}" title="このツイートについて報告する" data-scribe="element:favorite"><i class="ic-admin fa fa-flag fa-lg"></i><b>このツイートについて報告する</b></a></li>
+  <li><a href="report.html?id={id}" title="このツイートについて報告する" data-scribe="element:favorite"><i class="ic-admin fa fa-flag fa-lg"></i><b>このツイートについて報告する</b></a></li>
   <li><a href="https://twitter.com/intent/tweet?in_reply_to={id}" class="reply-action web-intent" title="返信" data-scribe="element:reply"><i class="ic-reply ic-mask"></i><b>返信</b></a></li>
   <li><a href="https://twitter.com/intent/retweet?tweet_id={id}" class="retweet-action web-intent" title="リツイート" data-scribe="element:retweet"><i class="ic-retweet ic-mask"></i><b>リツイート</b></a></li>
   <li><a href="https://twitter.com/intent/favorite?tweet_id={id}" class="favorite-action web-intent" title="お気に入り" data-scribe="element:favorite"><i class="ic-fav ic-mask"></i><b>お気に入り</b></a></li>
