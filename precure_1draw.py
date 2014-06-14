@@ -131,8 +131,10 @@ def retweet_and_record(tweet=False, id=False, retweet=True, fetch=True, exceptio
             ignores = yaml.load(f)
 
         # date
-        if not ('date' in tweet and tweet['date'] == '0-misc'):   # avoid overwrite misc category
+        if not ('date' in tweet.keys() and tweet['date'] == '0-misc'):   # avoid overwrite misc category
             date = get_date(tweet['tweet']['created_at'])
+        else:
+            date = tweet['date']
 
         # deny_retweet
         if (tweet['tweet']['user']['screen_name'] in ignores['deny_retweet_user']) or (tweet['tweet']['user']['id'] in ignores['deny_retweet_user']):
@@ -340,18 +342,18 @@ def has_id(id):
 def upsert_tweet(id, tweet, date, deny_retweet, deny_collection, exception):
     con = db_con()
     with con:
-        insert = False
         try:
             con.execute('insert into tweets(id, tweet, date, deny_retweet, deny_collection, exception) values (?,?,?,?,?,?)', (id, tweet, date, deny_retweet, deny_collection, exception))
-            insert = True
-        except:
-            con.execute('update tweets set tweet=?, date=?, deny_retweet=?, deny_collection=?, exception=? where id=?', (tweet, date, deny_retweet, deny_collection, exception, id))
-        print('-' * 16)
-        if insert:
+            print('-' * 16)
             print('Add a new record: {} deny_retweet: {}, deny_collection: {}'.format(id, deny_retweet, deny_collection))
-        else:
-            print('Update: {} deny_retweet: {}, deny_collection: {}'.format(id, deny_retweet, deny_collection))
-
+        except:
+            try:
+                con.execute('update tweets set tweet=?, date=?, deny_retweet=?, deny_collection=?, exception=? where id=?', (tweet, date, deny_retweet, deny_collection, exception, id))
+                print('-' * 16)
+                print('Update: {} deny_retweet: {}, deny_collection: {}'.format(id, deny_retweet, deny_collection))
+            except sqlite3.error as e:
+                print(e)
+                time.sleep(5)
 
 def get_id_tweet(id):
     con = db_con()
@@ -361,7 +363,6 @@ def get_tweets(date=''):
     con = db_con()
     if date:
         ts = [t for t in con.execute('select * from tweets where date=? order by id', (date, ))]
-        print(ts)
     else:
         ts = [t for t in con.execute('select * from tweets order by id')]
     return ts
@@ -655,6 +656,15 @@ def generate_date_html_circulate():
         f.seek(0)
         f.truncate()
         yaml.dump(ques, f)
+
+def generate_date_html_all():
+    with open(themes_file) as f:
+        fcntl.flock(f, fcntl.LOCK_SH)
+        themes = yaml.load(f)
+
+    for date in sorted(themes):
+        print('Updating:', date)
+        generate_date_html(date=date, fetch=False)
 
 # admin
 def handle_admin_action():
