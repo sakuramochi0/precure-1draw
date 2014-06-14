@@ -7,12 +7,12 @@
 <link type="text/css" rel="stylesheet" href="http://platform.twitter.com/embed/timeline.6a72a50e1a93dc4d97ff897124263ab7.default.css"></link>
 <link type="text/css" rel="stylesheet" href="tweet.css"></link>
 <link type="text/css" rel="stylesheet" href="default.css"></link>
-<title>{date} - {theme} | #プリキュア版深夜の真剣お絵描き60分1本勝負</title>
+<title>{date_str} - {theme} | #プリキュア版深夜の真剣お絵描き60分1本勝負</title>
 </head>
 <body>
 <div id="header">
 <h1><a href="./">#プリキュア版深夜の真剣お絵描き60分一本勝負</a></h1>
-<h2>{date}のまとめ<br />
+<h2>{date_str}のまとめ<br />
   テーマ: {theme}</h2>
 <img id="ribbon" src="img/ribbon-{ribbon_name}.png">
 </div>
@@ -21,6 +21,7 @@
 <!-- <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script> -->
 </div>
 <div id="footer">
+<p><a href="admin-{date}.html">管理者のページ</a></p>
 <p>最終更新日時: {last_update}</p>
 <p>Hosted by <a href="http://sakuramochi.mydns.jp">sakuramochi.mydns.jp</a></p>
 <a href="http://www.raspberrypi.org">
