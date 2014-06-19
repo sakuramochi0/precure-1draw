@@ -24,5 +24,5 @@ for i in range(1, 160):
     url = url_base + mintime
     print('{}回目: {}, {}'.format(i, get_ids[-1], mintime))
 
-    with open('topsy.yml', 'w') as f:
+    with open('topsy.yaml', 'w') as f:
         yaml.dump(ids, f)

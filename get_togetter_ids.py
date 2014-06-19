@@ -62,7 +62,7 @@ for page in pages:
         print('Add', len(page_ids), 'ids')
         print(page_ids)
 
-with open('togetter5.yml', 'w') as f:
+with open('togetter.yaml', 'w') as f:
     yaml.dump(ids, f)
     print(ids)
     print('Got', len(ids), 'ids')
