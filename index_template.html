@@ -2,39 +2,35 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8"/>
-<meta name="google-site-verification" content="XgVpJ5azAN2UwYSHRfKnJIPYVFtsNVnZRzKiLDfebX8" />
-<link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
-<link type="text/css" rel="stylesheet" href="default.css"></link>
 <title>#プリキュア版深夜の真剣お絵描き60分1本勝負</title>
+<link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+<link type="text/css" rel="stylesheet" href="default.css">
+<script src="css-changer.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script src="/js/google-analytics.js"></script>
 </head>
 <body>
-<script>
-(function(){{
-    var _UA = navigator.userAgent;
-    if (_UA.indexOf('iPhone') > -1 || _UA.indexOf('iPod') > -1) {{
-        document.write('<link rel="stylesheet" href="iphone.css">');
-    }}else if(_UA.indexOf('Android') > -1){{
-        document.write('<link rel="stylesheet" href="android.css">');
-    }}
-}})();
-</script>
 <div id="header">
 <h1>#プリキュア版深夜の真剣お絵描き60分一本勝負</h1>
 <h2>イラストのまとめのページ</h2>
 <img id="ribbon" src="img/ribbon-{ribbon_name}.png">
 </div>
 <div id="content">
+<p style="text-align: right; float: right;"><a href="about.html"><i class="fa fa-question-circle"></i> このページについて</a></p>
 <h3>テーマ一覧</h3>
 <table>
-<tr class="odd" style="text-align: center;">
+<tr class="header odd">
   <td class="num"><b>回数</b></td>
   <td class="date"><b>日付</b></td>
   <td class="theme"><b>テーマ</b></td>
-  <td class="works"><b>投稿数</b></td>
+  <td class="work_num"><b>作品数</b></td>
   <td class="togetter"><b>まとめ</b></td>
 </tr>
 {list}
 </table>
+
+<h3>作品数のグラフ</h3>
+<img src="chart.svg">
 </div>
 <div id="footer">
 <p><a href="admin-index.html">管理者のページ</a></p>
