@@ -19,6 +19,7 @@ from os import path
 from dateutil.parser import parse
 from io import BytesIO
 from pprint import pprint
+import subprocess
 
 import simplejson as json
 import requests
@@ -65,17 +66,21 @@ def auto_retweet_stream():
 def auto_retweet_rest(past=3, retweet=True):
     '''Retweet all the tweet which have the hash_tag by rest.'''
     max_id=''
+    tweets = []
     for i in range(past):
         res = t.search(q='#' + hash_tags[0] + ' -RT', count=100, result_type='recent', max_id=max_id)
         res = res['statuses']
         max_id = res[-1]['id_str']
         for tweet in res:
-            if not has_id(tweet['id']):
-                if retweet:
-                    retweet_and_record(tweet=tweet)
-                else:
-                    retweet_and_record(tweet=tweet, retweet=False)
+            tweets.append(tweet)
         time.sleep(10)
+
+    for tweet in reversed(tweets):
+        if not has_id(tweet['id']):
+            if retweet:
+                retweet_and_record(tweet=tweet)
+            else:
+                retweet_and_record(tweet=tweet, retweet=False)
 
 # retweet & record
 def retweet_and_record(tweet=False, id=False, retweet=True, fetch=True, exception=False):
@@ -206,6 +211,7 @@ def tweet_filter(tweet, new=False):
     # if fficial retweet
     elif tweet['tweet']['entities']['user_mentions']:
         hit = 'Including user mentions:'
+        return False
     # if mention or unofficial retweet
     elif 'retweeted_status' in tweet['tweet']['entities']:
         hit = 'Official retweet:'
@@ -225,6 +231,7 @@ def tweet_filter(tweet, new=False):
                 hit += 'Hit ignore_word "{}":'.format(word)
     if hit:
         print('-' * 16)
+        print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M'))
         print(hit)
         print_tweet(None, tweet=tweet)
         return False
@@ -237,7 +244,7 @@ def store_image(id):
     urls = []
     if 'media' in tweet['tweet']['entities']: # tweet has official image 
         for url in tweet['tweet']['entities']['media']:
-            urls.append((url['media_url'] + ':large', url['expanded_url']))
+            urls.append((url['media_url'] + ':orig', url['expanded_url']))
     else:
         for url in tweet['tweet']['entities']['urls']:
             urls.append(url['expanded_url'])
@@ -296,7 +303,7 @@ def store_image(id):
                 os.mkdir(save_dir)
             with open(save_dir + filename, 'wb') as f2:
                 f2.write(img)
-                print('Downloaded: {} -> {}'.format(url, save_dir + filename))
+                print('Downloaded: {} -> {} -> {}'.format(url, img_url, save_dir + filename))
 
         imgs.append({'url': url, 'img_url': img_url, 'filename': filename})
         set_col(id, 'imgs', imgs)
@@ -304,9 +311,10 @@ def store_image(id):
 def make_symlinks_to_img_dir():
     tweets = get_tweets()
     for tweet in tweets:
-        if not path.islink(img_dir + '-' + tweet['tweet']['user']['screen_name']):
-            os.symlink(os.getcwd() + '/' + img_dir + tweet['tweet']['user']['id_str'],
-                       os.getcwd() + '/' + img_dir + '-' + tweet['tweet']['user']['screen_name'])
+        src_dir = img_dir + '-' + tweet['tweet']['user']['id_str']
+        dst_dir = img_dir + '-' + tweet['tweet']['user']['screen_name']
+        if not path.islink(dst_dir):
+            os.symlink(os.getcwd() + '/' + src_dir, os.getcwd() + '/' + dst_dir)
 
 # database
 def db_con():
@@ -341,28 +349,36 @@ def has_id(id):
 
 def upsert_tweet(id, tweet, date, deny_retweet, deny_collection, exception):
     con = db_con()
-    with con:
-        try:
+    try:
+        with con:
             con.execute('insert into tweets(id, tweet, date, deny_retweet, deny_collection, exception) values (?,?,?,?,?,?)', (id, tweet, date, deny_retweet, deny_collection, exception))
             print('-' * 16)
+            print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M'))
             print('Add a new record: {} deny_retweet: {}, deny_collection: {}'.format(id, deny_retweet, deny_collection))
-        except:
-            try:
+    except:
+        try:
+            with con:
                 con.execute('update tweets set tweet=?, date=?, deny_retweet=?, deny_collection=?, exception=? where id=?', (tweet, date, deny_retweet, deny_collection, exception, id))
-                print('-' * 16)
-                print('Update: {} deny_retweet: {}, deny_collection: {}'.format(id, deny_retweet, deny_collection))
-            except sqlite3.error as e:
-                print(e)
-                time.sleep(5)
+                # print('-' * 16)
+                # print('Update: {} deny_retweet: {}, deny_collection: {}'.format(id, deny_retweet, deny_collection))
+        except sqlite3.Error as e:
+            print(e)
+            time.sleep(5)
 
 def get_id_tweet(id):
     con = db_con()
     return con.execute("select * from tweets where id=?", (id, )).fetchone()
 
-def get_tweets(date=''):
+def get_tweets(date='', screen_name=''):
     con = db_con()
     if date:
         ts = [t for t in con.execute('select * from tweets where date=? order by id', (date, ))]
+    elif screen_name:
+        for tweet in con.execute('select * from tweets order by id'):
+            if tweet['tweet']['user']['screen_name'] == screen_name:
+                user_id = tweet['tweet']['user']['id']
+                break
+        ts = [t for t in con.execute('select * from tweets') if t['tweet']['user']['id'] == user_id]
     else:
         ts = [t for t in con.execute('select * from tweets order by id')]
     return ts
@@ -405,11 +421,12 @@ def get_show_status_remaining():
     api_reset = datetime.datetime.fromtimestamp(api['reset'])
     return (api_remaining, api_reset)
 
-def sleep_until_reset():
+def sleep_until_api_reset():
     remaining, reset = get_show_status_remaining()
     if remaining == 0:
+        print('There is no api remaining. Sleep until', reset)
         now = datetime.datetime.now()
-        time.sleep((reset - now).seconds)
+        time.sleep((reset - now).seconds + 10)
 
 # generate html
 def get_date(time=''):
@@ -443,16 +460,17 @@ def update_themes():
         for tweet in res:
             date = get_date(tweet['created_at'])
             if date not in themes:
-                match = [tup[1] for tup in re.findall('(“|”)(.+?)(“|”)', tweet['text'])]
+                match = re.findall('(?:“|”)(.+?)(?:“|”)', tweet['text'])
                 if match:
                     themes[date] = {}
                     themes[date]['theme'] = ' / '.join(match)
                     themes[date]['num'] = 0
 
         for date in themes:
-            con = db_con()
-            con.execute("select * from tweets where date=?", (date, )).fetchall()
-            themes[date]['num'] = len([item for item in tweets if item['date'] == date])
+            # con = db_con()
+            # con.execute("select * from tweets where date=?", (date, )).fetchall()
+            # themes[date]['num'] = len([item for item in tweets if item['date'] == date])
+            themes[date]['num'] = len(get_tweets(date))
             togetter_url = [tweet['tweet']['entities']['urls'][0]['expanded_url']
                             for tweet in tweets
                             if tweet['tweet']['entities']['urls']
@@ -463,7 +481,6 @@ def update_themes():
                 themes[date]['togetter'] = togetter_url[0]
             else:
                 themes[date]['togetter'] = ''
-                
         
         f.seek(0)
         f.truncate()
@@ -471,8 +488,46 @@ def update_themes():
         
     with open(themes_file_admin, 'w') as f:
         fcntl.flock(f, fcntl.LOCK_EX)
-        yaml.dump(themes, f, allow_unicode=True)
+        json.dump(themes, f, ensure_ascii=False)
 
+def print_first_participants():
+    with open(themes_file, 'r+') as f:
+        fcntl.flock(f, fcntl.LOCK_EX)
+        themes = yaml.load(f)
+
+        users = []
+        for date in sorted(themes):
+            if date != '0-misc':
+                print('-'*8)
+                print(date)
+                tweets = get_tweets(date)
+                old = set(users)
+                users.extend([t['tweet']['user']['id'] for t in tweets])
+                new = set(users) - old
+                print(new)
+                for text in [tweet['tweet']['text'] for tweet in tweets if tweet['tweet']['user']['id'] in new]:
+                    print('*', text)
+                # print(set(users))
+                print(len(new))
+                
+def update_user_nums():
+    with open(themes_file, 'r+') as f:
+        fcntl.flock(f, fcntl.LOCK_EX)
+        themes = yaml.load(f)
+
+        users = []
+        for date in sorted(themes):
+            if date != '0-misc':
+                tweets = get_tweets(date)
+                users.extend([t['tweet']['user']['id'] for t in tweets])
+                themes[date]['user_num'] = len(set(users))
+        f.seek(0)
+        f.truncate()
+        yaml.dump(themes, f, allow_unicode=True)
+        
+def last_update():
+    return datetime.datetime.now().strftime('%Y年%m月%d日 %H:%M:%S')
+        
 def generate_index_html():
     locale.setlocale(locale.LC_ALL, '')
     with open(index_html_template_file) as f:
@@ -496,10 +551,10 @@ def generate_index_html():
             if date == '0-misc':
                 date_str = '-'
             else:
-                date_str = parse(date).strftime('%Y年%m月%d日(%a)')
+                date_str = parse(date).strftime('<span class="year">%Y年</span>%m月%d日(%a)')
 
-            if path.exists(html_dir + ribbon_name + date + '.html'):
-                link = '<a href="{ribbon_name}{date}.html">{theme}</a>'.format(ribbon_name=ribbon_name, date=date, theme=item['theme'])
+            if path.exists(html_dir + 'date/' + ribbon_name + date + '.html'):
+                link = '<a href="date/{ribbon_name}{date}.html">{theme}</a>'.format(ribbon_name=ribbon_name, date=date, theme=item['theme'])
             else:
                 link = item['theme']
 
@@ -509,7 +564,7 @@ def generate_index_html():
                 work_num = int(item['num'])
 
             if item['togetter']:
-                togetter = '<a href="{}"><i class="fa fa-square fa-lg" style="color: #7fc6bc"></i></a>'.format(item['togetter'])
+                togetter = '<a href="{}"><i class="fa fa-square fa-lg" style="color: #7fc6bc" title="Togetter のまとめを見る"></i></a>'.format(item['togetter'])
             else:
                 togetter = ''
 
@@ -525,7 +580,7 @@ def generate_index_html():
             trs.append(tr)
         html = index_html_template.format(ribbon_name=ribbon_name[:-1],
                                           list=''.join(trs),
-                                          last_update=datetime.datetime.now().strftime('%Y年%m月%d日 %H:%M:%S'))
+                                          last_update=last_update())
              
         with open(html_dir + ribbon_name + 'index.html', 'w') as f:
             f.write(html)
@@ -548,12 +603,10 @@ def generate_date_html(date='', fetch=True):
         tweet_admin_html_template = f1.read()
 
     # generate html
-    api_remaining, api_reset = get_show_status_remaining()
-
     date_tweets = get_tweets(date)
     tweets = []
     for tweet in date_tweets:
-        if not tweet['deny_collection'] and tweet['removed'] == '0' and not tweet['tweet']['user']['screen_name'] == 'precure_1draw':
+        if (not tweet['deny_collection']) and (tweet['removed'] == '0') and (not tweet['tweet']['user']['screen_name'] == 'precure_1draw'): # condition to collection
             tweets.append(tweet)
     if not tweets:
         print('There is no tweet of the day.')
@@ -563,11 +616,18 @@ def generate_date_html(date='', fetch=True):
         tweets = reversed(tweets)
     
     tweet_htmls = {}
+    api_remaining, api_reset = get_show_status_remaining()
+    count = 0
     for tweet in tweets:
-        if api_remaining > 50:
-            tweet = retweet_and_record(id=tweet['id'], retweet=False, fetch=fetch)
-            if not tweet:
-                continue
+        count += 1
+        if fetch and count >= api_remaining:
+            sleep_until_api_reset()
+            count = 0
+            api_remaining, api_reset = get_show_status_remaining()
+
+        tweet = retweet_and_record(id=tweet['id'], retweet=False, fetch=fetch)
+        if not tweet: # if the tweet is deleted, locked, or something
+            continue
 
         linked_text = tweet['tweet']['text'].replace('#プリキュア版深夜の真剣お絵描き60分一本勝負', r'<a href="https://twitter.com/search?q=%23%E3%83%97%E3%83%AA%E3%82%AD%E3%83%A5%E3%82%A2%E7%89%88%E6%B7%B1%E5%A4%9C%E3%81%AE%E7%9C%9F%E5%89%A3%E3%81%8A%E7%B5%B5%E6%8F%8F%E3%81%8D60%E5%88%86%E4%B8%80%E6%9C%AC%E5%8B%9D%E8%B2%A0&amp;src=hash" class="hashtag customisable">#<b>プリキュア版深夜の真剣お絵描き60分一本勝負</b></a>')
 
@@ -584,12 +644,12 @@ def generate_date_html(date='', fetch=True):
         imgs = []
         for img in tweet['imgs']:
             if img['filename']:
-                img_src = img_dir + tweet['tweet']['user']['id_str'] + '/' + img['filename']
+                img_src = '../' + img_dir + tweet['tweet']['user']['id_str'] + '/' + img['filename']
                 img_style = ''
             else: # no image
                 img_src = ''
                 img_style='display: none;'
-            imgs.append('<img class="illust" src="{img_src}" title="ツイートを見る" style="{img_style}">'.format(img_src=img_src, img_style=img_style))
+            imgs.append('<img class="illust lazy" src="{img_src}" title="ツイートを見る" style="{img_style}">'.format(img_src=img_src, img_style=img_style))
         imgs = '\n\n'.join(imgs)
 
         time = parse(tweet['tweet']['created_at'])
@@ -604,7 +664,8 @@ def generate_date_html(date='', fetch=True):
               .format(id=tweet['id'],
                       name=tweet['tweet']['user']['name'],
                       screen_name=tweet['tweet']['user']['screen_name'],
-                      img_url=tweet['imgs'][0]['url'],
+                      url=tweet['imgs'][0]['url'],
+                      img_url=tweet['imgs'][0]['img_url'],
                       imgs=imgs,
                       img_style=img_style,
                       icon_src=tweet['tweet']['user']['profile_image_url_https'],
@@ -634,7 +695,8 @@ def generate_date_html(date='', fetch=True):
                                          date_str=date_str,
                                          theme=theme,
                                          tweets=tweets_html,
-                                         last_update=datetime.datetime.now().strftime('%Y年%m月%d日 %H:%M:%S'))
+                                         last_update=last_update())
+                                         
         with open(html_dir + ribbon_name + date + '.html', 'w') as f:
             f.write(html)
 
@@ -666,44 +728,113 @@ def generate_date_html_all():
         print('Updating:', date)
         generate_date_html(date=date, fetch=False)
 
+def generate_user_html(screen_name):
+    with open(themes_file) as f:
+        fcntl.flock(f, fcntl.LOCK_SH)
+        themes = yaml.load(f)
+    with open(user_html_template_file) as f:
+        template = f.read()
+    tweets = get_tweets(screen_name=screen_name)
+    name = tweets[0]['tweet']['user']['name']
+    imgs = []
+    for tweet in reversed(tweets):
+        for img in tweet['imgs']:
+            img_path = img_dir + tweet['tweet']['user']['id_str'] + '/' + img['filename']
+            try:
+                caption = '{date}<br>{theme}'.format(date=tweet['date'], theme=themes[tweet['date']]['theme'])
+            except:
+                pprint(tweet['tweet'])
+            link = 'https://twitter.com/{}/status/{}'.format(tweet['tweet']['user']['screen_name'] ,tweet['id'])
+            imgs.append('<a href={link}><figure><img class="gallery" src="{src}"><figcaption>{caption}</figcaption></figure></a>'.format(link=link, src=img_path, caption=caption))
+
+    html = template.format(name='{} (@{})'.format(name, screen_name), imgs='\n\n'.join(imgs), last_update=last_update())
+    with open(html_dir + 'user/' + screen_name + '.html', 'w') as f:
+        f.write(html)
+
+def generate_user_html_all():
+    with open(ignores_file) as f:
+        fcntl.flock(f, fcntl.LOCK_SH)
+        ignores = yaml.load(f)
+    tweets = get_tweets()
+    users = [tweet['tweet']['user']['screen_name'] for tweet in tweets
+             if tweet['tweet']['user']['screen_name'] not in ignores['deny_collection_user']
+             and tweet['tweet']['user']['id'] not in ignores['deny_collection_user']]
+    for user in users:
+        generate_user_html(user)
+
 # admin
 def handle_admin_action():
-    for action_file in glob(html_dir + 'admin_actions.yml'):
-        with open(action_file, 'r+') as f:
-            fcntl.flock(f, fcntl.LOCK_EX)
-            actions = yaml.load(f)
-            while actions:
-                action = actions.pop()
-                if action['action'] == 'rotate':
-                    action_rotate(action['id'], action['angle'])
-                elif action['action'] == 'remove':
-                    action_remove(action['id'])
-                elif action['action'] == 'move':
-                    action_move(action['id'], action['date'])
-                elif action['action'] == 'ignore_user':
-                    action_deny_user(action['id'])
-                elif action['action'] == 'ignore_user':
-                    action_ignore_user(action['id'])
-                action_log(action)
-                f.seek(0)
-                f.truncate()
-                yaml.dump(actions, f)
+    with open(admin_actions_file, 'r+') as f:
+        fcntl.flock(f, fcntl.LOCK_EX)
+        actions = yaml.load(f)
+        while actions:
+            action = actions.pop()
+            if action['action'] == 'rotate':
+                action_rotate(action['id'], action['angle'])
+            elif action['action'] == 'remove':
+                action_remove(action['id'])
+            elif action['action'] == 'move':
+                action_move(action['id'], action['date'])
+            elif action['action'] == 'ignore_user':
+                action_deny_user(action['id'])
+            elif action['action'] == 'ignore_user':
+                action_ignore_user(action['id'])
+            action_log(action)
+            f.seek(0)
+            f.truncate()
+            yaml.dump(actions, f)
 
+def action_log(action):
+    '''Log a admin action.'''
+    with open(admin_actions_log_file, 'r+') as f:
+        fcntl.flock(f, fcntl.LOCK_EX)
+        log = yaml.load(f)
+        log[datetime.datetime.now()] = action
+        f.seek(0)
+        f.truncate()
+        yaml.dump(log, f, allow_unicode=True)
+
+def actions_log_html_tr(time, actions):
+    id = actions.pop('id')
+    action = actions.pop('action')
+    args = ['{arg}: {val}'.format(arg=arg, val=val) for arg, val in actions.items()]
+    args = ' / '.join(args)
+    tr = '''<tr>
+  <td class="time">{time}</td>
+  <td class="id">{id}</td>
+  <td class="action">{action}</td>
+  <td class="args">{args}</td>
+</tr>'''.format(time=time, id=id, action=action, args=args)
+    return tr
+
+def generate_admin_actions_log_html():
+    with open(admin_actions_log_file) as f:
+        logs = yaml.load(f)
+        logs_html_tr = [actions_log_html_tr(time,actions) for time, actions in logs.items()]
+        logs_html_tr = '\n\n'.join(logs_html_tr)
+
+        with open(admin_actions_log_html_template_file) as f:
+            admin_actions_log_html_template = f.read()
+        html = admin_actions_log_html_template.format(tr=logs_html_tr, last_update=last_update)
+
+        with open(html_dir + 'admin-actions-history.html', 'w') as f:
+            f.write(html )
+                
 # global action
-def action_add(id):
-    '''Add a tweet by id.'''
+def action_add_exception(id):
+    '''Add a tweet by id as a exception.'''
     retweet_and_record(id=id, retweet=False, exception=True)
     
 # local action
 def action_rotate(id, angle):
     '''Rotate the image of the tweet.'''
     if angle == 'left':
-        angle = 90
-    elif angle == 'right':
         angle = -90
+    elif angle == 'right':
+        angle = 90
     
     img_path = img_dir + get_id_tweet(id)['tweet']['user']['id_str'] + get_id_tweet(id)['imgs']['filename']
-    Image.open(img_path).rotate(angle).save(img_path)
+    subprocess.call(['mogrify', '-rotate', angle, img_path])
 
 def action_remove(id, un=False):
     '''Remove the tweet from the collection.'''
@@ -752,14 +883,6 @@ def action_ignore_user(id, un=False):
         f.seek(0)
         f.truncate()
         yaml.dump(ignores, f, allow_unicode=True)
-
-def action_log(action):
-    '''Log a admin action.'''
-    with open(action_log_file, 'r+') as f:
-        fcntl.flock(f, fcntl.LOCK_EX)
-        log = yaml.load(f)
-        log[str(datetime.datetime.now)] = action
-        yaml.dump(log, f, allow_unicode=True)
 
 def import_ids(file):
     with open(file) as f:
@@ -937,18 +1060,23 @@ if __name__ == '__main__':
     img_dir = 'img/'
 
     tweets_file = 'tweets.json'
-    themes_file = 'themes.yml'
-    themes_file_admin = html_dir + 'themes.yml'
+    themes_file = 'themes.yaml'
+    themes_file_admin = html_dir + 'themes.json'
 
-    ignores_file = 'ignores.yml'
+    ignores_file = 'ignores.yaml'
 
-    date_que_file = 'date_que.yml'
-    action_log_file = 'action_log.yml'
+    date_que_file = 'date_que.yaml'
+
+    admin_actions_file = 'admin_actions.yaml'
+    admin_actions_log_file = 'admin_actions_log.yaml'
+    admin_actions_log_html_template_file = 'admin_actions_log_template.html'
 
     index_html_template_file = 'index_template.html'
     date_html_template_file = 'date_template.html'
     tweet_html_template_file = 'tweet_template.html'
     tweet_admin_html_template_file = 'tweet_admin_template.html'
+    user_html_template_file = 'user_template.html'
+    
     ribbon_names = ['', 'admin-']
 
     t = auth()
