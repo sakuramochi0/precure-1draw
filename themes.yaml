@@ -1,4 +1,4 @@
-0-misc: {num: 9, theme: テーマ外のイラスト, togetter: ''}
+0-misc: {num: 9, theme: テーマ外のイラスト, togetter: '', user_num: 0}
 '2014-04-19': {num: 3, theme: 夢原のぞみ/キュアドリーム, togetter: '', user_num: 3}
 '2014-04-20': {num: 6, theme: 白雪ひめ/ヒメルダ・ウインドウ・キュアクイーン・オブ・ザ・ブルースカイ/キュアプリンセス, togetter: '',
   user_num: 7}
@@ -86,3 +86,5 @@
 '2014-06-17': {num: 107, theme: 美墨なぎさ/キュアブラック, togetter: 'http://togetter.com/li/681598',
   user_num: 667}
 '2014-06-18': {num: 98, theme: 名乗り, togetter: 'http://togetter.com/li/681967', user_num: 673}
+'2014-06-19': {num: 77, theme: 'イェイ! イェイ! イェイ!(歌:吉田仁美)', togetter: 'http://togetter.com/li/682322',
+  user_num: 682}
