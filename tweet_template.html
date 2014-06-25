@@ -33,8 +33,6 @@
   </a>
 </div>
 
-      <!-- <a class="follow-button profile" href="https://twitter.com/{screen_name}" role="button" data-scribe="component:followbutton" title="Twitterで{name}さんをフォロー"><i class="ic-button-bird"></i>フォローする</a> -->
-      
     </div>
     <div class="content e-entry-content" data-scribe="component:tweet">
       <p class="e-entry-title">{text}</p>
@@ -62,6 +60,8 @@
 </span>
 <ul class="tweet-actions" role="menu" aria-label="Tweet actions">
   {tweet_admin}
+  <li><a href="../user/{screen_name}.html" title="このユーザーのギャラリーを見る">
+      <i class="ic fa fa-picture-o fa-lg"></i><b>このユーザーのギャラリーを見る</b></a></li>
   <li><a href="report.html?id={id}" title="このツイートについて報告する">
       <i class="ic fa fa-flag fa-lg"></i><b>このツイートについて報告</b></a></li>
   <li><a href="https://twitter.com/intent/tweet?in_reply_to={id}" class="reply-action web-intent" title="リプライする">

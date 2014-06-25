@@ -1,4 +1,4 @@
-0-misc: {num: 9, theme: テーマ外のイラスト, togetter: '', user_num: 0}
+0-misc: {num: 12, theme: テーマ外のイラスト, togetter: '', user_num: 0}
 '2014-04-19': {num: 3, theme: 夢原のぞみ/キュアドリーム, togetter: '', user_num: 3}
 '2014-04-20': {num: 6, theme: 白雪ひめ/ヒメルダ・ウインドウ・キュアクイーン・オブ・ザ・ブルースカイ/キュアプリンセス, togetter: '',
   user_num: 7}
@@ -47,7 +47,7 @@
   user_num: 422}
 '2014-05-28': {num: 129, theme: 四葉ありす/キュアロゼッタ, togetter: 'http://togetter.com/li/673105',
   user_num: 443}
-'2014-05-29': {num: 67, theme: 'DANZEN! ふたりはプリキュア(歌:五條真由美)', togetter: 'http://togetter.com/li/673470',
+'2014-05-29': {num: 68, theme: 'DANZEN! ふたりはプリキュア(歌:五條真由美)', togetter: 'http://togetter.com/li/673470',
   user_num: 452}
 '2014-05-30': {num: 118, theme: 日野あかね/キュアサニー, togetter: 'http://togetter.com/li/673881',
   user_num: 467}
@@ -60,24 +60,24 @@
   user_num: 520}
 '2014-06-04': {num: 105, theme: 春日野うらら/キュアレモネード, togetter: 'http://togetter.com/li/676101',
   user_num: 529}
-'2014-06-05': {num: 150, theme: 来海えりか/キュアマリン, togetter: 'http://togetter.com/li/676522',
-  user_num: 552}
+'2014-06-05': {num: 149, theme: 来海えりか/キュアマリン, togetter: 'http://togetter.com/li/676522',
+  user_num: 551}
 '2014-06-06': {num: 63, theme: トリオ・ザ・マイナー, togetter: 'http://togetter.com/li/676927',
-  user_num: 562}
+  user_num: 561}
 '2014-06-07': {num: 143, theme: 青のプリキュア, togetter: 'http://togetter.com/li/677371',
-  user_num: 587}
+  user_num: 586}
 '2014-06-08': {num: 108, theme: 愛乃めぐみ/キュアラブリー, togetter: 'http://togetter.com/li/677887',
-  user_num: 596}
+  user_num: 595}
 '2014-06-09': {num: 61, theme: '「笑うが勝ち!」でGO!(歌:五條真由美)', togetter: 'http://togetter.com/li/678321',
-  user_num: 601}
+  user_num: 600}
 '2014-06-10': {num: 132, theme: 春日野うらら ＆ 黄瀬やよい / ココ ＆ ナッツ / 緑川なお ＆ 青木れいか / 相田マナ ＆
-    菱川六花 / 愛乃めぐみ ＆ 相楽誠司, togetter: 'http://togetter.com/li/678716', user_num: 613}
+    菱川六花 / 愛乃めぐみ ＆ 相楽誠司, togetter: 'http://togetter.com/li/678716', user_num: 612}
 '2014-06-11': {num: 110, theme: 夏木りん/キュアルージュ, togetter: 'http://togetter.com/li/679116',
-  user_num: 622}
+  user_num: 621}
 '2014-06-12': {num: 87, theme: 決め技(合体技), togetter: 'http://togetter.com/li/679517',
-  user_num: 631}
+  user_num: 630}
 '2014-06-13': {num: 81, theme: ジョナサン・クロンダイク/ジョー岡田, togetter: 'http://togetter.com/li/679897',
-  user_num: 634}
+  user_num: 633}
 '2014-06-14': {num: 76, theme: お父さん, togetter: 'http://togetter.com/li/680339', user_num: 642}
 '2014-06-15': {num: 113, theme: 緑川なお/キュアマーチ, togetter: 'http://togetter.com/li/680780',
   user_num: 653}
@@ -88,4 +88,14 @@
 '2014-06-18': {num: 98, theme: 名乗り, togetter: 'http://togetter.com/li/681967', user_num: 672}
 '2014-06-19': {num: 77, theme: 'イェイ! イェイ! イェイ!(歌:吉田仁美)', togetter: 'http://togetter.com/li/682322',
   user_num: 681}
-'2014-06-20': {num: 0, theme: 緑のプリキュア・白のプリキュア, togetter: '', user_num: 681}
+'2014-06-20': {num: 86, theme: 緑のプリキュア・白のプリキュア, togetter: 'http://togetter.com/li/682665',
+  user_num: 685}
+'2014-06-21': {num: 108, theme: 桃園ラブ/キュアピーチ, togetter: 'http://togetter.com/li/683148',
+  user_num: 692}
+'2014-06-22': {num: 118, theme: 菱川六花/キュアダイヤモンド, togetter: 'http://togetter.com/li/683588',
+  user_num: 705}
+'2014-06-23': {num: 134, theme: 眼鏡, togetter: 'http://togetter.com/li/684020', user_num: 716}
+'2014-06-24': {num: 101, theme: 夏服(私服), togetter: 'http://togetter.com/li/684425',
+  user_num: 723}
+'2014-06-25': {num: 67, theme: ナイトメア・エターナル, togetter: 'http://togetter.com/li/684844',
+  user_num: 728}

@@ -6,7 +6,6 @@
 import re
 import sys
 import os
-from glob import glob
 import difflib
 import fcntl
 import time
@@ -18,9 +17,9 @@ import sqlite3
 from os import path
 from dateutil.parser import parse
 from io import BytesIO
-from pprint import pprint
 import subprocess
 
+from pprint import pprint
 import simplejson as json
 import requests
 from bs4 import BeautifulSoup
@@ -50,7 +49,7 @@ class MyStreamer(TwythonStreamer):
     def on_success(self, tweet):
         if 'text' in tweet:
             try:
-                retweet_and_record(tweet)
+                retweet_and_record(tweet=tweet)
             except TwythonError as e:
                 with open('error.log', 'a') as f:
                     f.write(str(e) + '\n')
@@ -178,6 +177,9 @@ def retweet_and_record(tweet=False, id=False, retweet=True, fetch=True, exceptio
         if 'imgs' not in tweet.keys():
             store_image(tweet['tweet']['id'])
 
+        # add labels
+        update_labels(tweet['tweet']['id'])
+
         return tweet
         
 def including_hash_tag(tweet):
@@ -214,6 +216,11 @@ def tweet_filter(tweet, new=False):
     # if ignore_id tweet
     elif tweet['tweet']['id'] in ignores['ignore_id']:
         hit = 'Hit ignore_id:'
+    # if ignore_url
+    elif tweet['tweet']['entities']['urls'] and any([ignore_url in url
+                                                     for ignore_url in ignores['ignore_url']
+                                                     for url in tweet['tweet']['entities']['urls']]):
+        hit = 'Hit ignore_url:'
     # if fficial retweet
     elif tweet['tweet']['entities']['user_mentions']:
         hit = 'Including user mentions:'
@@ -237,23 +244,35 @@ def tweet_filter(tweet, new=False):
                 hit += 'Hit ignore_word "{}":'.format(word)
     if hit:
         print('-' * 16)
-        print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M'))
         print(hit)
         print_tweet(None, tweet=tweet)
         return False
     else:
         return True
     
+def record_user(screen_name):
+    '''Record all the tweets of the user.'''
+    tweets = t.get_user_timeline(screen_name=screen_name, count=100)
+    for tweet in tweets:
+        retweet_and_record(tweet=tweet, retweet=False)
+
 # image
 def store_image(id):
     tweet = get_id_tweet(id)
     urls = []
-    if 'media' in tweet['tweet']['entities']: # tweet has official image 
+    if 'extended_entities' in tweet['tweet'] and 'media' in tweet['tweet']['extended_entities']: # tweet has official image
+        for url in tweet['tweet']['extended_entities']['media']:
+            urls.append((url['media_url'] + ':orig', url['expanded_url']))
+    elif 'media' in tweet['tweet']['entities']: # tweet has official image
         for url in tweet['tweet']['entities']['media']:
             urls.append((url['media_url'] + ':orig', url['expanded_url']))
     else:
         for url in tweet['tweet']['entities']['urls']:
             urls.append(url['expanded_url'])
+
+    with open(ignores_file) as f:
+        fcntl.flock(f, fcntl.LOCK_SH)
+        ignores = yaml.load(f)
     headers = {}
     imgs = []
     for url in urls:
@@ -293,6 +312,7 @@ def store_image(id):
             img_url = False
 
         if img_url:
+            time.sleep(0.5)
             img = requests.get(img_url, headers=headers).content
             
             # guess filename & extenstion
@@ -317,9 +337,12 @@ def store_image(id):
                 print('Downloaded: {} -> {} -> {}'.format(url, img_url, save_dir + filename))
         else:
             filename = False
+            print('No image exists.')
 
         imgs.append({'url': url, 'img_url': img_url, 'filename': filename})
-        set_col(id, 'imgs', imgs)
+
+    # set imgs after save all the imgs loop
+    set_col(id, 'imgs', imgs)
 
 def make_symlinks_to_img_dir():
     tweets = get_tweets()
@@ -414,8 +437,8 @@ def print_tweet(id=0, tweet=None):
         tweet = get_id_tweet(id)
     print(tweet['tweet']['id']) # not tweet['id'] because tweet can have only 'tweet' key
     print('https://twitter.com/{}/status/{}'.format(tweet['tweet']['user']['screen_name'], tweet['tweet']['id']))
-    print('{} (@{})'.format(tweet['tweet']['user']['name'], tweet['tweet']['user']['screen_name']))
-    print(tweet['tweet']['text'])
+    #print('{} (@{})'.format(tweet['tweet']['user']['name'], tweet['tweet']['user']['screen_name']))
+    #print(tweet['tweet']['text'])
     #pprint(tweet['tweet'])
 
 def print_all_tweets():
@@ -423,8 +446,22 @@ def print_all_tweets():
     for i in ts:
         print('{} {} {}/{}/{} {}({}) | {}'.format(i['id'], i['date'], i['removed'], i['deny_collection'], i['deny_retweet'], i['tweet']['user']['name'], i['tweet']['user']['screen_name'], i['tweet']['text'][:10]))
 
-def redownload_all_images():
+def store_image_all():
     tweets = get_tweets()
+    for i, tweet in enumerate(tweets):
+        print('-' * 16)
+        print('#', i, tweet['id'])
+        if tweet['removed'] == '0':
+            try:
+                store_image(tweet['id'])
+            except:
+                pass
+            time.sleep(1)
+
+def store_image_date(date=''):
+    if not date:
+        date = get_date()
+    tweets = get_tweets(date=date)
     for i, tweet in enumerate(tweets):
         print('-' * 16)
         print('#', i, tweet['id'])
@@ -487,17 +524,19 @@ def update_themes():
         for tweet in res:
             date = get_date(tweet['created_at'])
             if date not in themes:
-                match = re.findall('(?:“|”)(.+?)(?:“|”)', tweet['text'])
+                match = re.findall('(?:“|”|\'|")(.+?)(?:“|”|\'|")', tweet['text'])
                 if match:
                     themes[date] = {}
                     themes[date]['theme'] = ' / '.join(match)
                     themes[date]['num'] = 0
-
         for date in themes:
             # con = db_con()
             # con.execute("select * from tweets where date=?", (date, )).fetchall()
             # themes[date]['num'] = len([item for item in tweets if item['date'] == date])
-            themes[date]['num'] = len(get_tweets(date))
+            if get_tweets(date):
+                themes[date]['num'] = len(get_tweets(date))
+            else:
+                themes[date]['num'] = 0
             togetter_url = [tweet['tweet']['entities']['urls'][0]['expanded_url']
                             for tweet in tweets
                             if tweet['tweet']['entities']['urls']
@@ -508,11 +547,11 @@ def update_themes():
                 themes[date]['togetter'] = togetter_url[0]
             else:
                 themes[date]['togetter'] = ''
-        
         f.seek(0)
         f.truncate()
         yaml.dump(themes, f, allow_unicode=True)
-        
+
+    # for use of admin page list
     with open(themes_file_admin, 'w') as f:
         fcntl.flock(f, fcntl.LOCK_EX)
         json.dump(themes, f, ensure_ascii=False)
@@ -530,8 +569,11 @@ def update_user_nums():
                 themes[date]['user_num'] = 0
             else:
                 tweets = get_tweets(date)
-                users.extend([t['tweet']['user']['id'] for t in tweets])
-                themes[date]['user_num'] = len(set(users))
+                if tweets:
+                    users.extend([t['tweet']['user']['id'] for t in tweets])
+                    themes[date]['user_num'] = len(set(users))
+                else:
+                    themes[date]['user_num'] = len(set(users))
         f.seek(0)
         f.truncate()
         yaml.dump(themes, f, allow_unicode=True)
@@ -593,6 +635,7 @@ def update_labels(id, force=False):
                 labels.append(str(lucky_num))
 
     # gif
+    print(id)
     if '/tweet_video_thumb/' in str(tweet['imgs'][0]['img_url']): # str() for bool value
         labels.append('GIF')
 
@@ -652,8 +695,9 @@ def get_labels_html(tweet, extra_class=''):
             title = '今回で{}回目の参加です！'.format(label)
             color = '#FF7200' #orange
         else:
+            title = 'その他'
             color = 'gray'
-        labels.append('<span class="label {}" title="{}" style="text-align: left; background-color: {}">{}</span>'.format(extra_class, title, color, label))
+        labels.append('<a href="../labels.html"><span class="label {}" title="{}" style="text-align: left; background-color: {}">{}</span></a>'.format(extra_class, title, color, label))
     if extra_class:
         html = '{}'.format('\n'.join(labels))
     else:
@@ -666,11 +710,12 @@ def generate_index_html():
     with open(index_html_template_file) as f:
         index_html_template = f.read()
     with open(themes_file) as f:
+        fcntl.flock(f, fcntl.LOCK_SH)
         themes = yaml.load(f)
     for ribbon_name in ribbon_names:
         trs = []
         even = True
-        
+
         for num, (date, item) in enumerate(reversed(sorted(themes.items()))):
             if even:
                 row = 'even'
@@ -692,7 +737,7 @@ def generate_index_html():
                 link = item['theme']
 
             if item['num'] == 0:
-                work_num = ''
+                work_num = '-'
             else:
                 work_num = int(item['num'])
 
@@ -726,6 +771,7 @@ def generate_date_html(date='', fetch=True):
     with open(themes_file) as f:
         fcntl.flock(f, fcntl.LOCK_SH)
         themes = yaml.load(f)
+    print(date)
     theme = themes[date]['theme']
 
     with open(date_html_template_file) as g:
@@ -761,7 +807,6 @@ def generate_date_html(date='', fetch=True):
             sleep_until_api_reset()
             count = 0
             api_remaining, api_reset = get_show_status_remaining()
-
         tweet = retweet_and_record(id=tweet['id'], retweet=False, fetch=fetch)
         if not tweet: # if the tweet is deleted, locked, or something
             continue
@@ -875,42 +920,45 @@ def generate_date_html_all():
         print('Updating:', date)
         generate_date_html(date=date, fetch=False)
 
-def generate_user_html(screen_name):
+def generate_user_html_all():
+    '''Generate all the user gallery pages.'''
     with open(themes_file) as f:
         fcntl.flock(f, fcntl.LOCK_SH)
         themes = yaml.load(f)
     with open(user_html_template_file) as f:
         template = f.read()
-    tweets = get_tweets(screen_name=screen_name)
-    name = tweets[0]['tweet']['user']['name']
-    imgs = []
-    for tweet in reversed(tweets):
-        for img in tweet['imgs']:
-            if img['filename']:
-                src = '../' + img_dir + tweet['tweet']['user']['id_str'] + '/' + img['filename']
-                labels = get_labels_html(tweet, extra_class='user-label')
-                try:
-                    caption = '{labels}{date}<br>{theme}'.format(labels=labels, date=tweet['date'], theme=themes[tweet['date']]['theme'])
-                except:
-                    pprint(tweet['tweet'])
-                link = 'https://twitter.com/{}/status/{}'.format(tweet['tweet']['user']['screen_name'] ,tweet['id'])
-                imgs.append('<a href={link}><figure><img class="gallery" src="{src}"><figcaption>{caption}</figcaption></figure></a>'.format(link=link, src=src, caption=caption))
-
-    html = template.format(name='{} (@{})'.format(name, screen_name), imgs='\n\n'.join(imgs), last_update=last_update())
-    with open(html_dir + 'user/' + screen_name + '.html', 'w') as f:
-        f.write(html)
-
-def generate_user_html_all():
     with open(ignores_file) as f:
         fcntl.flock(f, fcntl.LOCK_SH)
         ignores = yaml.load(f)
     tweets = get_tweets()
     users = set([tweet['tweet']['user']['screen_name'] for tweet in tweets
                 if tweet['tweet']['user']['screen_name'] not in ignores['deny_collection_user']
-                and tweet['tweet']['user']['id'] not in ignores['deny_collection_user']])
-    for user in users:
-        print('Generating page of', user)
-        generate_user_html(user)
+                and tweet['tweet']['user']['id'] not in ignores['deny_collection_user']
+                and tweet['tweet']['user']['screen_name'] not in ignores['deny_collection_gallery_user']
+                and tweet['tweet']['user']['id'] not in ignores['deny_collection_gallery_user']
+                ])
+    for screen_name in users:
+        #print('Generating page of', screen_name)
+        user_id = [tweet for tweet in tweets if tweet['tweet']['user']['screen_name'] == screen_name][-1]['tweet']['user']['id']
+        user_tweets = [tweet for tweet in tweets if tweet['tweet']['user']['id'] == user_id]
+        name = user_tweets[-1]['tweet']['user']['name']
+        imgs = []
+        for tweet in reversed(user_tweets):
+            for img in tweet['imgs']:
+                if img['filename']:
+                    src = '../' + img_dir + tweet['tweet']['user']['id_str'] + '/' + img['filename']
+                    labels = get_labels_html(tweet, extra_class='user-label')
+                    try:
+                        caption = '{labels}{date}<br>{theme}'.format(labels=labels, date=tweet['date'], theme=themes[tweet['date']]['theme'])
+                    except:
+                        pprint(tweet['tweet'])
+                    link = 'https://twitter.com/{}/status/{}'.format(tweet['tweet']['user']['screen_name'] ,tweet['id'])
+                    imgs.append('<a href={link}><figure><img class="gallery" src="{src}"><figcaption>{caption}</figcaption></figure></a>'.format(link=link, src=src, caption=caption))
+      
+        html = template.format(name='{} (@{})'.format(name, screen_name), imgs='\n\n'.join(imgs), last_update=last_update())
+        with open(html_dir + 'user/' + screen_name + '.html', 'w') as f:
+            f.write(html)
+#        generate_user_html(user)
 
 # admin
 def handle_admin_action():
@@ -979,11 +1027,11 @@ def action_add_exception(id):
 def action_rotate(id, angle):
     '''Rotate the image of the tweet.'''
     if angle == 'left':
-        angle = -90
+        angle = '-90'
     elif angle == 'right':
-        angle = 90
+        angle = '90'
     
-    img_path = img_dir + get_id_tweet(id)['tweet']['user']['id_str'] + get_id_tweet(id)['imgs']['filename']
+    img_path = img_dir + get_id_tweet(id)['tweet']['user']['id_str'] + '/' + get_id_tweet(id)['imgs'][0]['filename']
     subprocess.call(['mogrify', '-rotate', angle, img_path])
 
 def action_remove(id, un=False):
@@ -993,9 +1041,16 @@ def action_remove(id, un=False):
     else:
         set(id, 'removed', False)
 
-def action_move(id, date, un=False):
+def action_move(id, new_date, un=False):
     '''Move the tweet to the other page.'''
-    set_col(id, 'date', date)
+
+    old_date = get_id_tweet(id)['date']
+
+    set_col(id, 'date', new_date)
+
+    # update both date page
+    generate_date_html(date=old_date, fetch=True)
+    generate_date_html(date=new_date, fetch=True)
     
 def action_deny_user(id, un=False):
     '''Add the user of the tweet to deny_collection_user.'''
@@ -1138,43 +1193,56 @@ def check_db(collect=False):
                  {'url': (image page url),
                   'img_url': (image url),
                   'filename' (local basename)
-                 }*
+                 }*,
+             'labels': ['初参加', 'GIF', '10', ... ]
              ]
     }
     '''
-    keys = ['tweet', 'date', 'deny_retweet', 'deny_collection', 'removed', 'imgs']
+    keys = ['tweet', 'date', 'deny_retweet', 'deny_collection', 'removed', 'imgs', 'labels']
     imgs_keys = ['url', 'img_url', 'filename']
 
     tweets = get_tweets()
 
     for tweet in tweets:
         for key in keys:
-            if key in tweet.keys():
-                if collect:
-                    if key == 'imgs':
-                        store_image(tweet['id'])
-                    elif key == 'date':
-                        date = get_date(tweet['tweet']['created_at'])
-                        set_col(tweet['id'], 'date', date)
-                        print('Set date:', date)
+            if key not in tweet.keys():
+                print('{}: There is no {}'.format(tweet['id'], key))
             else:
-                if key == 'tweet':
+                if not tweet['tweet']:
                     print('{}: "tweet" value is empty.'.format(tweet['id']))
                 if not tweet['date']:
                     print('{}: "date" value is empty.'.format(tweet['id']))
-                if key == 'deny_retweet' or key == 'deny_collection':
+                    if collect:
+                        date = get_date(tweet['tweet']['created_at'])
+                        set_col(tweet['id'], 'date', date)
+                        print('Set date:', date)
+                if not tweet['deny_retweet'] or not tweet['deny_collection']:
                     if tweet[key] not in [0, 1]:
                         print('{}: "{}" must be bool, but "{}".'.format(tweet['id'], key, tweet[key]))
-                if key == 'removed':
+                if tweet['removed']:
                     if tweet['removed'] not in ['0', 'deleted', 'locked']:
                         print('{}: "removed" must be False, "deleted", or "locked", but "{}".'\
                               .format(tweet['id'], tweet[key]))
-                if key == 'imgs':
+                if ['imgs']:
                     for img in tweet['imgs']:
                         for key in imgs_keys:
                             if key not in img:
                                 print('{}: img: {}'.format(tweet['id'], img))
                                 print('                    "img" does not have "{}" key.'.format(key))
+                                if collect:
+                                    store_image(tweet['id'])
+
+def fix_db():
+    tweets = get_tweets()
+    for tweet in tweets:
+        if not tweet['imgs']:
+            print('-' * 16)
+            print('Fix imgs', tweet['id'])
+            store_image(tweet['id'])
+        if not tweet['labels']:
+            print('-' * 16)
+            print('Fix labels', tweet['id'])
+            update_labels(tweet['id'])
             
 def follow_back():
     '''Follow back all the followers who are not followed.'''
@@ -1235,6 +1303,59 @@ if __name__ == '__main__':
                  'プリキュア版深夜の真剣お絵描き60秒一本勝負']
     triger = 'http'
 
-    if len(sys.argv) == 2:
+    if len(sys.argv) == 1:
+        print('''Usage: precure_1draw.py 'func()'
+functions:
+  auto_retweet_stream()
+  auto_retweet_rest(past=3, retweet=True)
+  retweet_and_record(tweet=False, id=False, retweet=True, fetch=True, exception=False)
+  record_user(screen_name)
+  store_image(id)
+  make_symlinks_to_img_dir()
+  set_col(id, col, val)
+  has_id(id)
+  upsert_tweet(id, tweet, date, deny_retweet, deny_collection, exception)
+  get_id_tweet(id)
+  destroy_id_tweet(id)
+  get_tweets(date='', screen_name='')
+  print_tweet(id=0, tweet=None)
+  print_all_tweets()
+  store_image_all()
+  store_image_date(date='')
+  get_search_remaining()
+  get_show_status_remaining()
+  update_themes()
+  update_user_nums()
+  print_first_participants()
+  print_user_work_number(screen_name)
+  get_user_work_number(id)
+  update_labels(id, force=False)
+  get_id_all()
+  update_labels_all()
+  get_labels_html(tweet, extra_class='')
+  generate_index_html()
+  generate_date_html(date='', fetch=True)
+  generate_date_html_circulate()
+  generate_date_html_all()
+  generate_user_html_all()
+  handle_admin_action()
+  action_log(action)
+  actions_log_html_tr(time, actions)
+  generate_admin_actions_log_html()
+  action_add_exception(id)
+  action_rotate(id, angle)
+  action_remove(id, un=False)
+  action_move(id, new_date, un=False)
+  action_deny_user(id, un=False)
+  action_ignore_user(id, un=False)
+  import_ids(file)
+  import_statuses(file)
+  show_status(id)
+  db_import_from_json(file)
+  remove_no_url_tweets()
+  check_db(collect=False)
+  fix_db()
+  follow_back()''')
+    elif len(sys.argv) == 2:
         eval(sys.argv[1]) # run given name function
 
