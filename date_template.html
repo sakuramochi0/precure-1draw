@@ -2,20 +2,15 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8"/>
-<title>{date_str} - {theme} | #プリキュア版深夜の真剣お絵描き60分1本勝負</title>
+<title>{date_str} - {theme} | #プリキュア版深夜の真剣お絵描き60分1本勝負 まとめのページ</title>
 <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
-<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+<link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
 <link type="text/css" rel="stylesheet" href="http://platform.twitter.com/embed/timeline.6a72a50e1a93dc4d97ff897124263ab7.default.css"></link>
-<link type="text/css" rel="stylesheet" href="../tweet.css"></link>
-<link type="text/css" rel="stylesheet" href="../default.css"></link>
+<link type="text/css" rel="stylesheet" href="/css/1draw-collections-default.css">
 <script type="text/javascript" src="../css-changer.js"></script>
-<!-- <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script> -->
-<!-- <script src="/js/jquery.lazyload.min.js"></script> -->
-<!-- <script> -->
-<!--   $(function() {{ -->
-<!--     $('img.lazy').lazyload(); -->
-<!--   }}); -->
-<!-- </script> -->
+<script type="text/javascript" src="http://www.google.com/jsapi"></script>
+<script type="text/javascript" src="/js/counter.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
 <script src="/js/google-analytics.js"></script>
 </head>
 <body>
@@ -27,9 +22,17 @@
 </div>
 <div id="tweets">
 {tweets}
-<!-- <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script> -->
 </div>
+
 <div id="footer">
+<p style="margin-bottom: 6em;">
+  <a href="https://twitter.com/intent/tweet?original_referer=&text={date_str} - {theme} / プリキュア版深夜の真剣お絵描き60分1本勝負 まとめのページ&tw_p=tweetbutton&url=http://sakuramochi.mydns.jp/precure/1draw-collections/date/{date}.html">
+    <button class="btn">
+      <i class="fa fa-twitter" style="color: #62aedc;"></i> このページをツイートする
+    </button>
+  </a>
+</p>
+
 <p><a href="admin-{date}.html">管理者のページ</a></p>
 <p>最終更新日時: {last_update}</p>
 <p>Hosted by <a href="/">sakuramochi.mydns.jp</a></p>
