@@ -27,7 +27,7 @@ ax2.xaxis.set_major_locator(plt.MultipleLocator(5))
 ax2.yaxis.set_major_locator(plt.MultipleLocator(25))
 ax2.grid(True)
 
-fp = FontProperties(fname='/Library/fonts/Hiragino Sans GB W3.otf')
+fp = FontProperties(fname='Hiragino Sans GB W3.otf')
 ax1.set_xlabel('回数', fontproperties=fp)
 ax1.set_ylabel('累計参加者数', fontproperties=fp)
 ax2.set_ylabel('作品数', fontproperties=fp)
