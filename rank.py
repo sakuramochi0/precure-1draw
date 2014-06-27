@@ -33,7 +33,7 @@ for date in reversed(sorted(themes)):
     idx = (np.abs(bins - fav)).argmin()
     #plt.text(bins[idx]-2, -1, str(fav), color='palevioletred')
     patches[idx].set_facecolor('palevioletred')
-    fp = FontProperties(fname='/Library/fonts/Hiragino Sans GB W3.otf')
+    fp = FontProperties(fname='Hiragino Sans GB W3.otf')
     ax.set_xlabel('Fav+RT', fontproperties=fp)
     ax.set_ylabel('人数', fontproperties=fp)
     filename = '{}-{}.svg'.format(screen_name, date)
@@ -41,14 +41,14 @@ for date in reversed(sorted(themes)):
 
     total = len(frs[date])
     rank = sorted(frs[date], reverse=True).index(fav)
+    percent = int((rank / total) * 100)
 
-    imgs.append('''<p style="margin-left: 4em;">{}{} - {}<br>Fav+RT: {}<br>Rank: {} / {}</p>
+    imgs.append('''<p style="margin-left: 4em;">{}{} - {}<br>Fav+RT: {}<br>Rank: {} / {} ({}%)</p>
     <img src="{tweet}" style="max-width: 500px;">
     <img id="{src}" src="{src}">'''.format(get_labels_html(tweet, extra_class='user-label'), date, themes[date]['theme'],
-                                           fav, rank, total, src=filename,
+                                           fav, rank, total, percent, src=filename,
                                            tweet='precure/1draw-collections/img/{}/{}'.format(tweet['tweet']['user']['id'],
                                                                                        tweet['imgs'][0]['filename'])))
-
 template = '''<!doctype html>
 <html lang="ja">
 <head>
