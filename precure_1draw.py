@@ -1009,7 +1009,9 @@ def generate_rank_html():
     """
     Generate user rank pages.
     """
-    screen_names = ['piyotori', 'zuzunazu']
+    with open('rank_users.yaml') as f:
+        fcntl.flock(f, fcntl.LOCK_SH)
+        screen_names = yaml.load(f)
     
     with open('themes.yaml') as f:
         fcntl.flock(f, fcntl.LOCK_SH)
@@ -1039,8 +1041,11 @@ def generate_rank_html():
             fp = FontProperties(fname='Hiragino Sans GB W3.otf')
             ax.set_xlabel('Fav+RT', fontproperties=fp)
             ax.set_ylabel('人数', fontproperties=fp)
-            filename = '{}-{}.svg'.format(screen_name, date)
-            plt.savefig(path.expanduser('~/www/') + filename)
+            save_dir = html_dir + 'user/rank/' + screen_name
+            if not os.path.exists(save_dir):
+                os.mkdir(save_dir)
+            filename = date + '.svg'
+            plt.savefig(html_dir + 'user/rank/' + screen_name + '/' + filename)
             plt.close()
          
             total = len(frs[date])
@@ -1048,14 +1053,14 @@ def generate_rank_html():
             percent = int((rank / total) * 100)
          
             imgs.append('''<p style="margin-left: 4em;">{}{} - {}<br>Fav+RT: {}<br>Rank: {} / {} ({}%)</p>
-            <img src="{tweet}" style="max-width: 500px;">
-            <img id="{src}" src="{src}">'''.format(get_labels_html(tweet, extra_class='user-label'), date, themes[date]['theme'], fav, rank, total, percent, src=filename, tweet='precure/1draw-collections/img/{}/{}'.format(tweet['tweet']['user']['id'], tweet['imgs'][0]['filename'])))
+            <img src="{img}" style="max-width: 500px;">
+            <img id="{src}" src="{src}">'''.format(get_labels_html(tweet, extra_class='user-label'), date, themes[date]['theme'], fav, rank, total, percent, src=screen_name + '/' + filename, img='/precure/1draw-collections/img/{}/{}'.format(tweet['tweet']['user']['id'], tweet['imgs'][0]['filename'])))
      
         with open('rank_template.html') as f:
             template = f.read()
         html = template.format('\n<hr style="margin: 2em;">\n'.join(imgs), last_update=last_update())
          
-        with open(path.expanduser('~/www/{}-rank.html').format(screen_name), 'w') as f:
+        with open(html_dir + 'user/rank/{}.html'.format(screen_name), 'w') as f:
             f.write(html)
 
 # admin
