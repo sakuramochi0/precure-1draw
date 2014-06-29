@@ -11,15 +11,15 @@ import fcntl
 import time
 import locale
 import datetime
-import pytz
-import yaml
 import sqlite3
 from os import path
-from dateutil.parser import parse
 from io import BytesIO
 import subprocess
-
 from pprint import pprint
+
+import pytz
+import yaml
+from dateutil.parser import parse
 import simplejson as json
 import requests
 from bs4 import BeautifulSoup
@@ -27,6 +27,8 @@ from twython import Twython
 from twython import TwythonStreamer
 from twython import TwythonError
 from PIL import Image
+
+import chart
 
 # init
 def auth():
@@ -706,6 +708,7 @@ def get_labels_html(tweet, extra_class=''):
 
 def generate_index_html():
     '''Generate index.html of the 1draw-collection.'''
+    chart.chart()
     locale.setlocale(locale.LC_ALL, '')
     with open(index_html_template_file) as f:
         index_html_template = f.read()
