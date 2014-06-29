@@ -27,6 +27,9 @@ from twython import Twython
 from twython import TwythonStreamer
 from twython import TwythonError
 from PIL import Image
+import matplotlib.pyplot as plt
+from matplotlib.font_manager import FontProperties
+import numpy as np
 
 import chart
 
@@ -962,6 +965,64 @@ def generate_user_html_all():
         with open(html_dir + 'user/' + screen_name + '.html', 'w') as f:
             f.write(html)
 #        generate_user_html(user)
+
+def fav_plus_rt(tweet):
+    return tweet['tweet']['favorite_count'] + tweet['tweet']['retweet_count']
+
+def generate_rank_html():
+    """
+    Generate user rank pages.
+    """
+    screen_names = ['piyotori', 'zuzunazu']
+    
+    with open('themes.yaml') as f:
+        fcntl.flock(f, fcntl.LOCK_SH)
+        themes = yaml.load(f)
+     
+    tweets = get_tweets()
+    for screen_name in screen_names:
+        frs = {}
+        imgs = []
+        for date in reversed(sorted(themes)):
+            frs[date] = [fav_plus_rt(tweet) for tweet in tweets
+                         if tweet['date'] == date and tweet['tweet']['favorite_count'] < 150]
+         
+            tweet = [tweet for tweet in tweets
+                   if tweet['date'] == date and tweet['tweet']['user']['screen_name'] == screen_name]
+            if tweet:
+                tweet = tweet[0]
+                fav = fav_plus_rt(tweet)
+            else:
+                continue
+         
+            fig, ax = plt.subplots()
+            n, bins, patches = plt.hist(frs[date], color='skyblue', bins=50)
+            idx = (np.abs(bins - fav)).argmin()
+            #plt.text(bins[idx]-2, -1, str(fav), color='palevioletred')
+            patches[idx].set_facecolor('palevioletred')
+            fp = FontProperties(fname='Hiragino Sans GB W3.otf')
+            ax.set_xlabel('Fav+RT', fontproperties=fp)
+            ax.set_ylabel('人数', fontproperties=fp)
+            filename = '{}-{}.svg'.format(screen_name, date)
+            plt.savefig(path.expanduser('~/www/') + filename)
+         
+            total = len(frs[date])
+            rank = sorted(frs[date], reverse=True).index(fav)
+            percent = int((rank / total) * 100)
+         
+            imgs.append('''<p style="margin-left: 4em;">{}{} - {}<br>Fav+RT: {}<br>Rank: {} / {} ({}%)</p>
+            <img src="{tweet}" style="max-width: 500px;">
+            <img id="{src}" src="{src}">'''.format(get_labels_html(tweet, extra_class='user-label'), date, themes[date]['theme'],
+                                                   fav, rank, total, percent, src=filename,
+                                                   tweet='precure/1draw-collections/img/{}/{}'.format(tweet['tweet']['user']['id'],
+                                                                                               tweet['imgs'][0]['filename'])))
+     
+        with open('rank_template.html') as f:
+            template = f.read()
+        html = template.format('\n<hr style="margin: 2em;">\n'.join(imgs), last_update=last_update())
+         
+        with open(path.expanduser('~/www/{}-rank.html').format(screen_name), 'w') as f:
+            f.write(html)
 
 # admin
 def handle_admin_action():
