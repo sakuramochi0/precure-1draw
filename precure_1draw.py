@@ -1048,10 +1048,7 @@ def generate_rank_html():
          
             imgs.append('''<p style="margin-left: 4em;">{}{} - {}<br>Fav+RT: {}<br>Rank: {} / {} ({}%)</p>
             <img src="{tweet}" style="max-width: 500px;">
-            <img id="{src}" src="{src}">'''.format(get_labels_html(tweet, extra_class='user-label'), date, themes[date]['theme'],
-                                                   fav, rank, total, percent, src=filename,
-                                                   tweet='precure/1draw-collections/img/{}/{}'.format(tweet['tweet']['user']['id'],
-                                                                                               tweet['imgs'][0]['filename'])))
+            <img id="{src}" src="{src}">'''.format(get_labels_html(tweet, extra_class='user-label'), date, themes[date]['theme'], fav, rank, total, percent, src=filename, tweet='precure/1draw-collections/img/{}/{}'.format(tweet['tweet']['user']['id'], tweet['imgs'][0]['filename'])))
      
         with open('rank_template.html') as f:
             template = f.read()
