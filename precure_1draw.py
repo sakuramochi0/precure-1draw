@@ -1041,6 +1041,7 @@ def generate_rank_html():
             ax.set_ylabel('人数', fontproperties=fp)
             filename = '{}-{}.svg'.format(screen_name, date)
             plt.savefig(path.expanduser('~/www/') + filename)
+            plt.close()
          
             total = len(frs[date])
             rank = sorted(frs[date], reverse=True).index(fav)
