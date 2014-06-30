@@ -1068,36 +1068,41 @@ def handle_admin_action():
     with open(admin_actions_file, 'r+') as f:
         fcntl.flock(f, fcntl.LOCK_EX)
         actions = yaml.load(f)
-        while actions:
-            action = actions.pop()
-            if action['action'] == 'rotate':
-                action_rotate(action['id'], action['angle'])
-            elif action['action'] == 'remove':
-                action_remove(action['id'])
-            elif action['action'] == 'move':
-                action_move(action['id'], action['date'])
-            elif action['action'] == 'ignore_user':
-                action_deny_user(action['id'])
-            elif action['action'] == 'ignore_user':
-                action_ignore_user(action['id'])
-            action_log(action)
+        for date, item in  actions.items():
+            action = item['action']
+            if action == 'rotate':
+                action_rotate(item['id'], item['angle'])
+            elif action == 'remove':
+                action_remove(item['id'])
+            elif action == 'move':
+                action_move(item['id'], item['dist'])
+            elif action == 'deny_collection_user':
+                action_deny_collection_user(item['id'])
+            elif action == 'ignore_user':
+                action_ignore_user(item['id'])
+            item['done'] = True
             f.seek(0)
             f.truncate()
             yaml.dump(actions, f)
 
-def action_log(action):
-    '''Log a admin action.'''
-    with open(admin_actions_log_file, 'r+') as f:
-        fcntl.flock(f, fcntl.LOCK_EX)
-        log = yaml.load(f)
-        log[datetime.datetime.now()] = action
-        f.seek(0)
-        f.truncate()
-        yaml.dump(log, f, allow_unicode=True)
-
-def actions_log_html_tr(time, actions):
+def actions_history_tr(time, actions):
     id = actions.pop('id')
     action = actions.pop('action')
+    if action == 'rotate':
+        if actions['angle'] == 'left':
+            action = '反時計回りに90°回転する'
+        elif actions['angle'] == 'right':
+            action = '時計回りに90°回転する'
+    elif action == 'remove':
+        action = ''
+    elif action == 'ignore_user':
+        action = action['']
+    elif action == 'move':
+        with open(themes_file) as f:
+            fcntl.flock(f, fcntl.LOCK_EX)
+            themes = yaml.load(f)
+        action = '「{} - {}」へ移動する'.format(actions['date'] + themes[actions['date']]['theme'])
+        
     args = ['{arg}: {val}'.format(arg=arg, val=val) for arg, val in actions.items()]
     args = ' / '.join(args)
     tr = '''<tr>
@@ -1108,18 +1113,18 @@ def actions_log_html_tr(time, actions):
 </tr>'''.format(time=time, id=id, action=action, args=args)
     return tr
 
-def generate_admin_actions_log_html():
-    with open(admin_actions_log_file) as f:
+def generate_admin_history_html():
+    with open(admin_actions_history_html_file) as f:
         logs = yaml.load(f)
-        logs_html_tr = [actions_log_html_tr(time,actions) for time, actions in logs.items()]
-        logs_html_tr = '\n\n'.join(logs_html_tr)
+        tr = [actions_history_tr(time, actions) for time, actions in logs.items()]
+        tr = '\n\n'.join(tr)
 
-        with open(admin_actions_log_html_template_file) as f:
-            admin_actions_log_html_template = f.read()
-        html = admin_actions_log_html_template.format(tr=logs_html_tr, last_update=last_update)
+        with open(admin_actions_history_html_file) as f:
+            template = f.read()
+        html = template.format(tr=tr, last_update=last_update)
 
-        with open(html_dir + 'admin-actions-history.html', 'w') as f:
-            f.write(html )
+        with open(html_dir + 'date/admin-history.html', 'w') as f:
+            f.write(html)
                 
 # global action
 def action_add_exception(id):
@@ -1152,21 +1157,22 @@ def action_move(id, new_date, un=False):
     set_col(id, 'date', new_date)
 
     # update both date page
-    generate_date_html(date=old_date, fetch=True)
-    generate_date_html(date=new_date, fetch=True)
+    generate_date_html(date=old_date, fetch=False)
+    generate_date_html(date=new_date, fetch=False)
     
-def action_deny_user(id, un=False):
+def action_deny_collection_user(id, un=False):
     '''Add the user of the tweet to deny_collection_user.'''
     with open(ignores_file, 'r+') as f:
         fcntl.flock(f, fcntl.LOCK_EX)
         ignores= yaml.load(f)
 
+        tweet = get_id_tweet(id)
         if not un:
-            ignores['deny_collection'].append(get_id_tweet(id)['user']['id'])
-            ignores['deny_collection'].append(get_id_tweet(id)['user']['screen_name'])
+            ignores['deny_collection'].append(tweet['tweet']['user']['id'])
+            ignores['deny_collection'].append(tweet['tweet']['user']['screen_name'])
         else:
-            ignores['deny_collection'].remove(get_id_tweet(id)['user']['id'])
-            ignores['deny_collection'].remove(get_id_tweet(id)['user']['screen_name'])
+            ignores['deny_collection'].remove(tweet['tweet']['user']['id'])
+            ignores['deny_collection'].remove(tweet['tweet']['user']['screen_name'])
 
         f.seek(0)
         f.truncate()
@@ -1174,19 +1180,17 @@ def action_deny_user(id, un=False):
 
 def action_ignore_user(id, un=False):
     '''Add the user of the tweet to deny_collection_user.'''
-    with open(tweets_file) as f:
-        fcntl.flock(f, fcntl.LOCK_SH)
-        tweets = yaml.load(f)
     with open(ignores_file, 'r+') as f:
         fcntl.flock(f, fcntl.LOCK_EX)
         ignores= yaml.load(f)
 
+        tweet = get_id_tweet(id)
         if not un:
-            ignores['ignore_user'].append(tweets[id]['user']['id'])
-            ignores['ignore_user'].append(tweets[id]['user']['screen_name'])
+            ignores['ignore_user'].append(tweet[id]['user']['id'])
+            ignores['ignore_user'].append(tweet[id]['user']['screen_name'])
         else:
-            ignores['ignore_user'].remove(tweets[id]['user']['id'])
-            ignores['ignore_user'].remove(tweets[id]['user']['screen_name'])
+            ignores['ignore_user'].remove(tweet[id]['user']['id'])
+            ignores['ignore_user'].remove(tweet[id]['user']['screen_name'])
 
         f.seek(0)
         f.truncate()
@@ -1388,8 +1392,7 @@ if __name__ == '__main__':
     date_que_file = 'date_que.yaml'
 
     admin_actions_file = 'admin_actions.yaml'
-    admin_actions_log_file = 'admin_actions_log.yaml'
-    admin_actions_log_html_template_file = 'admin_actions_log_template.html'
+    admin_actions_history_html_file = 'admin_actions_history_template.html'
 
     index_html_template_file = 'index_template.html'
     date_html_template_file = 'date_template.html'
