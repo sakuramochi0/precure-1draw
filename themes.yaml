@@ -1,4 +1,4 @@
-0-misc: {num: 13, theme: テーマ外のイラスト, togetter: '', user_num: 0}
+0-misc: {num: 20, theme: テーマ外のイラスト, togetter: '', user_num: 0}
 '2014-04-19': {num: 3, theme: 夢原のぞみ/キュアドリーム, togetter: '', user_num: 3}
 '2014-04-20': {num: 6, theme: 白雪ひめ/ヒメルダ・ウインドウ・キュアクイーン・オブ・ザ・ブルースカイ/キュアプリンセス, togetter: '',
   user_num: 7}
@@ -34,11 +34,11 @@
 '2014-05-19': {num: 90, theme: 水無月かれん/キュアアクア, togetter: '', user_num: 261}
 '2014-05-20': {num: 134, theme: レジーナ, togetter: '', user_num: 297}
 '2014-05-21': {num: 96, theme: 九条ひかり/シャイニールミナス, togetter: '', user_num: 312}
-'2014-05-22': {num: 118, theme: プリキュアオールスターズNewStageシリーズ, togetter: '', user_num: 334}
+'2014-05-22': {num: 117, theme: プリキュアオールスターズNewStageシリーズ, togetter: '', user_num: 333}
 '2014-05-23': {num: 75, theme: 東せつな/キュアパッション, togetter: 'http://togetter.com/li/671048',
-  user_num: 358}
+  user_num: 357}
 '2014-05-24': {num: 92, theme: バッドエンド王国, togetter: 'http://togetter.com/li/671468',
-  user_num: 376}
+  user_num: 375}
 '2014-05-25': {num: 134, theme: 夢原のぞみ/キュアドリーム, togetter: 'http://togetter.com/li/671927',
   user_num: 400}
 '2014-05-26': {num: 82, theme: 運動会(体育の授業・部活動含む), togetter: 'http://togetter.com/li/672367',
@@ -103,5 +103,11 @@
   user_num: 730}
 '2014-06-27': {num: 58, theme: '最高のスマイル(歌:キュアハッピー&amp;キュアサニー&amp;キュアピース&amp;キュアマーチ&amp;キュアビューティ)',
   togetter: 'http://togetter.com/li/685594', user_num: 732}
-'2014-06-28': {num: 119, theme: 青木れいか/キュアビューティ, togetter: 'http://togetter.com/li/686036',
-  user_num: 741}
+'2014-06-28': {num: 118, theme: 青木れいか/キュアビューティ, togetter: 'http://togetter.com/li/686036',
+  user_num: 739}
+'2014-06-29': {num: 42, theme: ダークフォール, togetter: 'http://togetter.com/li/686487',
+  user_num: 744}
+'2014-06-30': {num: 83, theme: パワーアップフォーム, togetter: 'http://togetter.com/li/686943',
+  user_num: 745}
+'2014-07-01': {num: 71, theme: '私立アリア学園中学校 ', togetter: 'http://togetter.com/li/687383',
+  user_num: 750}
