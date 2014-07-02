@@ -67,6 +67,7 @@ def auto_retweet_stream():
 
 def auto_retweet_rest(past=3, retweet=True):
     '''Retweet all the tweet which have the hash_tag by rest.'''
+    # gather
     max_id=''
     tweets = []
     for i in range(past):
@@ -77,6 +78,7 @@ def auto_retweet_rest(past=3, retweet=True):
             tweets.append(tweet)
         time.sleep(10)
 
+    # record
     for tweet in reversed(tweets):
         if not has_id(tweet['id']):
             if retweet:
@@ -134,7 +136,7 @@ def retweet_and_record(tweet=False, id=False, retweet=True, fetch=True, exceptio
         if tweet:
             set_col(id, 'tweet', tweet) # update
         tweet = get_id_tweet(id)
-            
+
     # excluding filters
     if tweet_filter(tweet, new=new) or exception:
         
@@ -143,7 +145,7 @@ def retweet_and_record(tweet=False, id=False, retweet=True, fetch=True, exceptio
             ignores = yaml.load(f)
 
         # get date
-        if not ('date' in tweet.keys() and tweet['date'] == '0-misc'):   # avoid overwrite misc category
+        if not 'date' in tweet.keys():
             date = get_date(tweet['tweet']['created_at'])
         else:
             date = tweet['date']
@@ -153,12 +155,14 @@ def retweet_and_record(tweet=False, id=False, retweet=True, fetch=True, exceptio
             deny_retweet = True
         else:
             deny_retweet = False
-            if retweet and not has_id(tweet['tweet']['id']):
+            if (retweet and new) or (not new and not tweet['tweet']['retweeted']):
                 try:
                     t.retweet(id=tweet['tweet']['id'])
+                    tweet['tweet']['retweeted'] = True
                 except TwythonError as e:
                     if e.error_code == 403:
                         print('Double retweet:', tweet['tweet']['id'])
+                        tweet['tweet']['retweeted'] = True
 
         # set deny_collection
         if (tweet['tweet']['user']['screen_name'] in ignores['deny_collection_user']) or (tweet['tweet']['user']['id'] in ignores['deny_collection_user']):
@@ -273,9 +277,6 @@ def store_image(id):
         for url in tweet['tweet']['entities']['urls']:
             urls.append(url['expanded_url'])
 
-    with open(ignores_file) as f:
-        fcntl.flock(f, fcntl.LOCK_SH)
-        ignores = yaml.load(f)
     headers = {}
     imgs = []
     for url in urls:
@@ -527,15 +528,13 @@ def update_themes():
         for tweet in res:
             date = get_date(tweet['created_at'])
             if date not in themes:
+                t.retweet(id=tweet['id'])
                 match = re.findall('(?:“|”|\'|")(.+?)(?:“|”|\'|")', tweet['text'])
                 if match:
                     themes[date] = {}
                     themes[date]['theme'] = ' / '.join(match)
                     themes[date]['num'] = 0
         for date in themes:
-            # con = db_con()
-            # con.execute("select * from tweets where date=?", (date, )).fetchall()
-            # themes[date]['num'] = len([item for item in tweets if item['date'] == date])
             if get_tweets(date):
                 themes[date]['num'] = len(get_tweets(date))
             else:
@@ -916,12 +915,15 @@ def generate_date_html(date='', fetch=True):
     if date == '0-misc':
         date_str = ''
         num = ''
+        h2 = '{theme}のまとめ'.format(date_str=date_str, theme=theme)
     else:
         date_str = parse(date).strftime('%Y年%m月%d日')
         num = '第{}回'.format(sorted(themes).index(date))
+        h2 = '{date_str}のまとめ<br />テーマ: {theme}'.format(date_str=date_str, theme=theme)
     for ribbon_name in ribbon_names:
         tweets_html = '\n\n'.join(tweet_htmls[ribbon_name])
         html = date_html_template.format(ribbon_name=ribbon_name[:-1],
+                                         h2=h2,
                                          num=num,
                                          date=date,
                                          date_str=date_str,
@@ -997,10 +999,9 @@ def generate_user_html_all():
                     link = 'https://twitter.com/{}/status/{}'.format(tweet['tweet']['user']['screen_name'] ,tweet['id'])
                     imgs.append('<a href={link}><figure><img class="gallery" src="{src}"><figcaption>{caption}</figcaption></figure></a>'.format(link=link, src=src, caption=caption))
       
-        html = template.format(name='{} (@{})'.format(name, screen_name), imgs='\n\n'.join(imgs), last_update=last_update())
+        html = template.format(name=name, screen_name=screen_name, imgs='\n\n'.join(imgs), last_update=last_update())
         with open(html_dir + 'user/' + screen_name + '.html', 'w') as f:
             f.write(html)
-#        generate_user_html(user)
 
 def fav_plus_rt(tweet):
     return tweet['tweet']['favorite_count'] + tweet['tweet']['retweet_count']
@@ -1036,8 +1037,12 @@ def generate_rank_html():
             fig, ax = plt.subplots()
             n, bins, patches = plt.hist(frs[date], color='skyblue', bins=50)
             idx = (np.abs(bins - fav)).argmin()
-            #plt.text(bins[idx]-2, -1, str(fav), color='palevioletred')
-            patches[idx].set_facecolor('palevioletred')
+            if patches[idx].get_height():
+                patches[idx].set_facecolor('palevioletred')
+            elif patches[idx+1].get_height():
+                patches[idx+1].set_facecolor('palevioletred')
+            else:
+                patches[idx-1].set_facecolor('palevioletred')
             fp = FontProperties(fname='Hiragino Sans GB W3.otf')
             ax.set_xlabel('Fav+RT', fontproperties=fp)
             ax.set_ylabel('人数', fontproperties=fp)
@@ -1064,68 +1069,84 @@ def generate_rank_html():
             f.write(html)
 
 # admin
-def handle_admin_action():
+def handle_admin_actions():
     with open(admin_actions_file, 'r+') as f:
         fcntl.flock(f, fcntl.LOCK_EX)
         actions = yaml.load(f)
-        for date, item in  actions.items():
-            action = item['action']
-            if action == 'rotate':
-                action_rotate(item['id'], item['angle'])
-            elif action == 'remove':
-                action_remove(item['id'])
-            elif action == 'move':
-                action_move(item['id'], item['dist'])
-            elif action == 'deny_collection_user':
-                action_deny_collection_user(item['id'])
-            elif action == 'ignore_user':
-                action_ignore_user(item['id'])
-            item['done'] = True
-            f.seek(0)
-            f.truncate()
-            yaml.dump(actions, f)
 
+        for time, item in actions.items():
+            if not item['done']:
+                action = item['action']
+                args = item['args']
+                id = item['id']
+                if action == 'rotate':
+                    action_rotate(id, args['angle'])
+                elif action == 'remove':
+                    action_remove(id)
+                elif action == 'move':
+                    action_move(id, args['dest'])
+                elif action == 'deny_collection_user':
+                    action_deny_collection_user(id)
+                elif action == 'ignore_user':
+                    action_ignore_user(id)
+        for time, item in actions.items():
+             item['done'] = True
+        f.seek(0)
+        f.truncate()
+        yaml.dump(actions, f)
+        
+    generate_admin_history_html()
+
+def generate_admin_history_html():
+    with open(admin_actions_file) as f:
+        actions = yaml.load(f)
+        tr = [actions_history_tr(time, item) for time, item in reversed(sorted(actions.items()))]
+        tr = '\n\n'.join(tr)
+
+        with open(admin_actions_history_html_file) as f:
+            template = f.read()
+        html = template.format(tr=tr, last_update=last_update())
+
+        with open(html_dir + 'date/admin-history.html', 'w') as f:
+            f.write(html)
+                
 def actions_history_tr(time, actions):
     id = actions.pop('id')
     action = actions.pop('action')
     if action == 'rotate':
-        if actions['angle'] == 'left':
+        if actions['args']['angle'] == 'left':
             action = '反時計回りに90°回転する'
-        elif actions['angle'] == 'right':
+        elif actions['args']['angle'] == 'right':
             action = '時計回りに90°回転する'
     elif action == 'remove':
-        action = ''
+        action = 'まとめから削除する'
     elif action == 'ignore_user':
         action = action['']
     elif action == 'move':
         with open(themes_file) as f:
             fcntl.flock(f, fcntl.LOCK_EX)
             themes = yaml.load(f)
-        action = '「{} - {}」へ移動する'.format(actions['date'] + themes[actions['date']]['theme'])
+        date = get_id_tweet(id)['date']
+        action = '「{} - {}」へ移動する'.format(actions['args']['dest'], themes[actions['args']['dest']]['theme'])
         
     args = ['{arg}: {val}'.format(arg=arg, val=val) for arg, val in actions.items()]
     args = ' / '.join(args)
+    time = time.strftime('%Y年%m月%d日 %H:%M')
+    user = get_id_tweet(id)['tweet']['user']['screen_name']
+    admin = actions['admin']
+    if actions['done']:
+        done = '実行済み'
+    else:
+        done = '未完了'
     tr = '''<tr>
   <td class="time">{time}</td>
-  <td class="id">{id}</td>
+  <td class="id"><a href="https://twitter.com/{user}/status/{id}"><i class="fa fa-square fa-lg" style="color: skyblue" title="ツイートページを見る"></i></a></td>
   <td class="action">{action}</td>
-  <td class="args">{args}</td>
-</tr>'''.format(time=time, id=id, action=action, args=args)
+  <td class="user">{admin}</td>
+  <td class="done">{done}</td>
+</tr>'''.format(time=time, user=user, id=id, action=action, admin=admin, done=done)
     return tr
 
-def generate_admin_history_html():
-    with open(admin_actions_history_html_file) as f:
-        logs = yaml.load(f)
-        tr = [actions_history_tr(time, actions) for time, actions in logs.items()]
-        tr = '\n\n'.join(tr)
-
-        with open(admin_actions_history_html_file) as f:
-            template = f.read()
-        html = template.format(tr=tr, last_update=last_update)
-
-        with open(html_dir + 'date/admin-history.html', 'w') as f:
-            f.write(html)
-                
 # global action
 def action_add_exception(id):
     '''Add a tweet by id as a exception.'''
@@ -1145,9 +1166,11 @@ def action_rotate(id, angle):
 def action_remove(id, un=False):
     '''Remove the tweet from the collection.'''
     if not un:
-        set(id, 'removed', 'deleted')
+        set_col(id, 'removed', 'deleted')
     else:
-        set(id, 'removed', False)
+        set_col(id, 'removed', False)
+    date = get_id_tweet(id)['date']
+    generate_date_html(date=date, fetch=False)
 
 def action_move(id, new_date, un=False):
     '''Move the tweet to the other page.'''
@@ -1178,6 +1201,8 @@ def action_deny_collection_user(id, un=False):
         f.truncate()
         yaml.dump(ignores, f, allow_unicode=True)
 
+    generate_date_html_all()
+
 def action_ignore_user(id, un=False):
     '''Add the user of the tweet to deny_collection_user.'''
     with open(ignores_file, 'r+') as f:
@@ -1195,6 +1220,8 @@ def action_ignore_user(id, un=False):
         f.seek(0)
         f.truncate()
         yaml.dump(ignores, f, allow_unicode=True)
+
+    generate_date_html_all()
 
 def import_ids(file):
     with open(file) as f:
@@ -1391,7 +1418,7 @@ if __name__ == '__main__':
 
     date_que_file = 'date_que.yaml'
 
-    admin_actions_file = 'admin_actions.yaml'
+    admin_actions_file = 'html/date/admin_actions.yaml'
     admin_actions_history_html_file = 'admin_actions_history_template.html'
 
     index_html_template_file = 'index_template.html'
