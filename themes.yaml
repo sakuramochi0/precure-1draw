@@ -1,4 +1,4 @@
-0-misc: {num: 20, theme: テーマ外のイラスト, togetter: '', user_num: 0}
+0-misc: {num: 22, theme: テーマ外のイラスト, togetter: '', user_num: 0}
 '2014-04-19': {num: 3, theme: 夢原のぞみ/キュアドリーム, togetter: '', user_num: 3}
 '2014-04-20': {num: 6, theme: 白雪ひめ/ヒメルダ・ウインドウ・キュアクイーン・オブ・ザ・ブルースカイ/キュアプリンセス, togetter: '',
   user_num: 7}
@@ -111,3 +111,6 @@
   user_num: 745}
 '2014-07-01': {num: 71, theme: '私立アリア学園中学校 ', togetter: 'http://togetter.com/li/687383',
   user_num: 750}
+'2014-07-02': {num: 82, theme: 美々野くるみ/ミルキィローズ, togetter: 'http://togetter.com/li/687838',
+  user_num: 757}
+'2014-07-03': {num: 23, theme: ブルー または 相楽誠司, togetter: '', user_num: 759}
