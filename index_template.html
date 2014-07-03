@@ -6,42 +6,86 @@
 <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
 <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
 <link type="text/css" rel="stylesheet" href="/css/1draw-collections-default.css">
-<script src="css-changer.js"></script>
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script src="css-changer.js"></script>
+<script src="/js/lang-switch.js"></script>
 <script src="/js/google-analytics.js"></script>
 </head>
 <body>
 <div id="header">
 <h1>#プリキュア版深夜の真剣お絵描き60分一本勝負</h1>
-<h2>イラストのまとめのページ</h2>
+<h2 class="ja">イラストのまとめのページ</h2>
+<h2 class="en">Precure 1 Hour Drawing Challenge Illust Collections</h2>
 <img id="ribbon" src="img/ribbon-{ribbon_name}.png">
 </div>
 <div id="content">
-<p style="text-align: right; float: right;"><a href="about.html"><i class="fa fa-question-circle"></i> このページについて</a></p>
-<h3>テーマ一覧</h3>
-<table>
-<tr class="header odd">
-  <td class="num"><b>回数</b></td>
-  <td class="date"><b>日付</b></td>
-  <td class="theme"><b>テーマ</b></td>
-  <td class="work_num"><b>作品数</b></td>
-  <td class="togetter"><b>まとめ</b></td>
-</tr>
-{list}
-</table>
+  <div class="btn-group" style="float: right;">
+    <button id="ja" class="btn btn-default active" type="button">ja</button>
+    <button id="en" class="btn btn-default" type="button">en</button>
+  </div>
+  
+  <p style="margin: 6px;">
+    <a href="about.html"><i class="fa fa-question-circle"></i>
+      <span class="ja">このサイトについて</span>
+      <span class="en">About this site</span>
+    </a>
+  </p>
 
-<img src="chart.svg" style="margin-top: 50px">
+  <div class="panel panel-danger" style="margin: 3em 0 2em;">
+    <div class="panel-heading"><i class="fa fa-info-circle"></i> 
+      <span class="ja">お知らせ</span>
+      <span class="en">Information</span>
+    </div>
+    <table class="table">
+      <tbody>
+	{info_table}
+    </tbody></table>
+  </div>
+  
+  <h3 class="ja">テーマ一覧</h3>
+  <h3 class="en">Themes</h3>
+  <table class="themes">
+    <tr class="header odd ja">
+      <td class="num"><b>回数</b></td>
+      <td class="date"><b>日付</b></td>
+      <td class="theme"><b>テーマ</b></td>
+      <td class="work_num"><b>作品数</b></td>
+      <td class="togetter"><b>Togetter</b></td>
+    </tr>
+    <tr class="header odd en">
+      <td class="num"><b>#</b></td>
+      <td class="date"><b>Date</b></td>
+      <td class="theme"><b>Theme</b></td>
+      <td class="work_num"><b>Work#</b></td>
+      <td class="togetter"><b>Togetter</b></td>
+    </tr>
+    {list}
+  </table>
+
+  <!-- chart -->
+  <h3 class="ja">参加者と作品数のグラフ</h3>
+  <h3 class="en">Chart of participants and works number</h3>
+  <img class="ja" src="chart.svg">
+  <img class="en" src="chart-en.svg">
+
 </div>
 <div id="footer">
 <p style="margin-bottom: 6em;">
   <a href="https://twitter.com/intent/tweet?original_referer=&text=プリキュア版深夜の真剣お絵描き60分1本勝負 まとめのページ&tw_p=tweetbutton&url=http://sakuramochi.mydns.jp/precure/1draw-collections">
-    <button class="btn tweet-btn" style="width: 20em;">
+    <button class="btn tweet-btn ja" style="width: 20em;">
       <i class="fa fa-twitter" style="color: #62aedc;"></i> このページをツイートする
     </button>
   </a>
+  <a href="https://twitter.com/intent/tweet?original_referer=&text=プリキュア版深夜の真剣お絵描き60分1本勝負 Precure 1 Hour Drawing Challenge Illust Collections&tw_p=tweetbutton&url=http://sakuramochi.mydns.jp/precure/1draw-collections/index-en.html">
+    <button class="btn tweet-btn en" style="width: 20em;">
+      <i class="fa fa-twitter" style="color: #62aedc;"></i> Tweet this page
+    </button>
+  </a>
 </p>
-<p>最終更新日時: {last_update}</p>
-<p><a href="admin-index.html">管理者のページ</a></p>
+<p class="ja">最終更新日時: {last_update}</p>
+<p class="en">Last Updated at {last_update_en}</p>
+<p class="ja"><a href="admin-index.html">管理者のページ</a></p>
+<p class="en"><a href="admin-index.html">Admin page</a></p>
 </div>
 </body>
 </html>

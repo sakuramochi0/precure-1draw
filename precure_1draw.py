@@ -155,7 +155,7 @@ def retweet_and_record(tweet=False, id=False, retweet=True, fetch=True, exceptio
             deny_retweet = True
         else:
             deny_retweet = False
-            if (retweet and new) or (not new and not tweet['tweet']['retweeted']):
+            if (retweet and new):
                 try:
                     t.retweet(id=tweet['tweet']['id'])
                     tweet['tweet']['retweeted'] = True
@@ -528,12 +528,12 @@ def update_themes():
         for tweet in res:
             date = get_date(tweet['created_at'])
             if date not in themes:
-                t.retweet(id=tweet['id'])
                 match = re.findall('(?:“|”|\'|")(.+?)(?:“|”|\'|")', tweet['text'])
                 if match:
                     themes[date] = {}
                     themes[date]['theme'] = ' / '.join(match)
                     themes[date]['num'] = 0
+                    t.retweet(id=tweet['id'])
         for date in themes:
             if get_tweets(date):
                 themes[date]['num'] = len(get_tweets(date))
@@ -600,9 +600,12 @@ def print_first_participants():
                 # print(set(users))
                 print(len(new))
                 
-def last_update():
+def last_update(lang='ja'):
     '''Return datetime.now() as formated text.'''
-    return datetime.datetime.now().strftime('%Y年%m月%d日 %H:%M:%S')
+    if lang == 'ja':
+        return datetime.datetime.now().strftime('%Y年%m月%d日 %H:%M:%S')
+    elif lang == 'en':
+        return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         
 def print_user_work_number(screen_name):
     '''Print the work's number and text of the user.'''
@@ -739,10 +742,15 @@ def chart():
     p2 = plt.Rectangle((0, 0), 1, 1, fc="palevioletred")
     ax1.legend([p1, p2], ['累計参加者数', '作品数'], loc='upper left', prop=fp)
      
-    #ax1.legend()
-     
     #plt.title('作品数の変化', fontproperties=fp)
     plt.savefig('html/chart.svg')
+
+    # en
+    ax1.set_xlabel('#', fontproperties=fp)
+    ax1.set_ylabel('Total perticipant')
+    ax2.set_ylabel('Works')
+    ax1.legend([p1, p2], ['Total perticipants', 'Works'], loc='upper left')
+    plt.savefig('html/chart-en.svg')
 
 def generate_index_html():
     '''Generate index.html of the 1draw-collection.'''
@@ -750,27 +758,41 @@ def generate_index_html():
     locale.setlocale(locale.LC_ALL, '')
     with open(index_html_template_file) as f:
         index_html_template = f.read()
+    with open('info.yaml') as f:
+        infos = yaml.load(f)
+    soup = BeautifulSoup()
+    info_table = soup.new_tag('table')
+    for info in infos:
+        tr = soup.new_tag('tr')
+        # date
+        td = soup.new_tag('td')
+        td.append(BeautifulSoup(info[0]))
+        tr.append(td)
+        # ja
+        td = soup.new_tag('td')
+        td.append(BeautifulSoup(info[1]))
+        td['class'] = 'ja'
+        tr.append(td)
+        # en
+        td = soup.new_tag('td')
+        td.append(BeautifulSoup(info[2]))
+        td['class'] = 'en'
+        tr.append(td)
+        info_table.append(tr)
+
     with open(themes_file) as f:
         fcntl.flock(f, fcntl.LOCK_SH)
         themes = yaml.load(f)
     for ribbon_name in ribbon_names:
         trs = []
-        even = True
-
         for num, (date, item) in enumerate(reversed(sorted(themes.items()))):
-            if even:
-                row = 'even'
-                even = False
-            else:
-                row = 'odd'
-                even = True
-
             num = len(themes) - num -1
 
             if date == '0-misc':
                 date_str = '-'
             else:
                 date_str = parse(date).strftime('<span class="year">%Y年</span>%m月%d日(%a)')
+                date_str_en = parse(date).strftime('<span class="year">%Y/</span>%m/%d')
 
             if path.exists(html_dir + 'date/' + ribbon_name + date + '.html'):
                 link = '<a href="date/{ribbon_name}{date}.html">{theme}</a>'.format(ribbon_name=ribbon_name, date=date, theme=item['theme'])
@@ -787,20 +809,22 @@ def generate_index_html():
             else:
                 togetter = ''
 
-            tr = '''<tr class ="{row}">
+            tr = '''<tr>
             <td class="num">#{num:2d}</td>
-            <td class="date">{date_str}</td>
+            <td class="date ja">{date_str}</td>
+            <td class="date en">{date_str_en}</td>
             <td class="theme">{link}</td>
             <td class="work_num">{work_num}</td>
             <td class="togetter">
               {togetter}
             </td>
-            </tr>'''.format(row=row, num=num, date_str=date_str, link=link, theme=item['theme'], work_num=work_num, togetter=togetter)
+            </tr>'''.format(num=num, date_str=date_str, date_str_en=date_str_en, link=link, theme=item['theme'], work_num=work_num, togetter=togetter)
             trs.append(tr)
-        html = index_html_template.format(ribbon_name=ribbon_name[:-1],
+        html = index_html_template.format(info_table=info_table,
+                                          ribbon_name=ribbon_name[:-1],
                                           list=''.join(trs),
-                                          last_update=last_update())
-             
+                                          last_update=last_update(),
+                                          last_update_en=last_update(lang='en'))
         with open(html_dir + ribbon_name + 'index.html', 'w') as f:
             f.write(html)
 
@@ -1422,6 +1446,7 @@ if __name__ == '__main__':
     admin_actions_history_html_file = 'admin_actions_history_template.html'
 
     index_html_template_file = 'index_template.html'
+    index_en_html_template_file = 'index_en_template.html'
     date_html_template_file = 'date_template.html'
     tweet_html_template_file = 'tweet_template.html'
     tweet_admin_html_template_file = 'tweet_admin_template.html'
