@@ -6,14 +6,16 @@
 <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
 <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
 <link type="text/css" rel="stylesheet" href="/css/1draw-collections-default.css">
-<script src="../css-changer.js"></script>
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script src="css-changer.js"></script>
+<script src="/js/lang-switch.js"></script>
 <script src="/js/google-analytics.js"></script>
 </head>
 <body>
 <div id="header">
 <h1><a href="../">#プリキュア版深夜の真剣お絵描き60分一本勝負</a></h1>
-<h2>{name} (@{screen_name}) さんのギャラリー</h2>
+<h2 class="ja">{name} (@{screen_name}) さんのギャラリー</h2>
+<h2 class="en">Gallery of {name} (@{screen_name})</h2>
 <img id="ribbon" src="../img/ribbon-.png">
 </div>
 
@@ -23,9 +25,14 @@
 
 <div id="footer">
 <p style="margin-bottom: 6em;">
-  <a href="https://twitter.com/intent/tweet?original_referer=&text={name} (@{screen_name}) さんのギャラリー / プリキュア版深夜の真剣お絵描き60分1本勝負 まとめのページ&tw_p=tweetbutton&url=http://sakuramochi.mydns.jp/precure/1draw-collections/user/{name}">
-    <button class="btn tweet-btn">
+  <a href="https://twitter.com/intent/tweet?original_referer=&text={name} (@{screen_name}) さんのギャラリー / %23プリキュア版深夜の真剣お絵描き60分一本勝負 まとめのページ&tw_p=tweetbutton&url=http://sakuramochi.mydns.jp/precure/1draw-collections/user/{screen_name}">
+    <button class="btn tweet-btn ja">
       <i class="fa fa-twitter" style="color: #62aedc;"></i> このページをツイートする
+    </button>
+  </a>
+  <a href="https://twitter.com/intent/tweet?original_referer=&text=Gallery of {name} (@{screen_name}) / %23プリキュア版深夜の真剣お絵描き60分一本勝負 Precure 1 Hour Drawing Challenge Illust Collections&tw_p=tweetbutton&url=http://sakuramochi.mydns.jp/precure/1draw-collections/user/{screen_name}">
+    <button class="btn tweet-btn en">
+      <i class="fa fa-twitter" style="color: #62aedc;"></i> Tweet this page
     </button>
   </a>
 </p>
