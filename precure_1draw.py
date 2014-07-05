@@ -151,18 +151,22 @@ def retweet_and_record(tweet=False, id=False, retweet=True, fetch=True, exceptio
             date = tweet['date']
 
         # exclude a tweet of deny_retweet and set it
+        if not 'retweeted' in tweet:
+            retweeted = False
+        else:
+            retweeted = tweet['retweeted']
         if (tweet['tweet']['user']['screen_name'] in ignores['deny_retweet_user']) or (tweet['tweet']['user']['id'] in ignores['deny_retweet_user']):
             deny_retweet = True
         else:
             deny_retweet = False
-            if (retweet and new):
+            if retweet and not retweeted:
                 try:
                     t.retweet(id=tweet['tweet']['id'])
-                    tweet['tweet']['retweeted'] = True
+                    retweeted = True
                 except TwythonError as e:
                     if e.error_code == 403:
                         print('Double retweet:', tweet['tweet']['id'])
-                        tweet['tweet']['retweeted'] = True
+                        retweeted = True
 
         # set deny_collection
         if (tweet['tweet']['user']['screen_name'] in ignores['deny_collection_user']) or (tweet['tweet']['user']['id'] in ignores['deny_collection_user']):
@@ -173,12 +177,12 @@ def retweet_and_record(tweet=False, id=False, retweet=True, fetch=True, exceptio
         # set exception
         if exception or (not new and tweet['exception']):
             exception = True
-            print(tweet['tweet']['id'], 'Accepted by exception')
+            #print(tweet['tweet']['id'], 'Accepted by exception')
         else:
             exception = False
             
         # update database record
-        upsert_tweet(tweet['tweet']['id'], tweet['tweet'], date, deny_retweet, deny_collection, exception)
+        upsert_tweet(tweet['tweet']['id'], tweet['tweet'], date, deny_retweet, deny_collection, exception, retweeted)
 
         # get images
         if 'imgs' not in tweet.keys():
@@ -251,6 +255,7 @@ def tweet_filter(tweet, new=False):
                 hit += 'Hit ignore_word "{}":'.format(word)
     if hit:
         print('-' * 16)
+        print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M'))
         print(hit)
         print_tweet(None, tweet=tweet)
         return False
@@ -334,7 +339,7 @@ def store_image(id):
 
             # save image
             save_dir = img_dir + tweet['tweet']['user']['id_str'] + '/'
-            if not os.path.exists(save_dir):
+            if not path.exists(save_dir):
                 os.mkdir(save_dir)
             with open(save_dir + filename, 'wb') as f2:
                 f2.write(img)
@@ -387,20 +392,18 @@ def has_id(id):
     with con:
         return len(con.execute('select * from tweets where id=?', (id, )).fetchall()) == 1
 
-def upsert_tweet(id, tweet, date, deny_retweet, deny_collection, exception):
+def upsert_tweet(id, tweet, date, deny_retweet, deny_collection, exception, retweeted):
     con = db_con()
     try:
         with con:
-            con.execute('insert into tweets(id, tweet, date, deny_retweet, deny_collection, exception) values (?,?,?,?,?,?)', (id, tweet, date, deny_retweet, deny_collection, exception))
+            con.execute('insert into tweets(id, tweet, date, deny_retweet, deny_collection, exception, retweeted) values (?,?,?,?,?,?,?)', (id, tweet, date, deny_retweet, deny_collection, exception, retweeted))
             print('-' * 16)
             print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M'))
             print('Add a new record: {} deny_retweet: {}, deny_collection: {}'.format(id, deny_retweet, deny_collection))
     except:
         try:
             with con:
-                con.execute('update tweets set tweet=?, date=?, deny_retweet=?, deny_collection=?, exception=? where id=?', (tweet, date, deny_retweet, deny_collection, exception, id))
-                # print('-' * 16)
-                # print('Update: {} deny_retweet: {}, deny_collection: {}'.format(id, deny_retweet, deny_collection))
+                con.execute('update tweets set tweet=?, date=?, deny_retweet=?, deny_collection=?, exception=?, retweeted=? where id=?', (tweet, date, deny_retweet, deny_collection, exception, retweeted, id))
         except sqlite3.Error as e:
             print(e)
             time.sleep(5)
@@ -612,6 +615,7 @@ def print_user_work_number(screen_name):
     tweets = get_tweets(screen_name=screen_name)
     for num, tweet in enumerate(tweets):
         print(num+1, tweet['tweet']['text'])
+        pprint(tweet['removed'])
 
 def get_user_work_number(id):
     '''Return the number of the id tweet work of the user.'''
@@ -747,7 +751,7 @@ def chart():
 
     # en
     ax1.set_xlabel('#', fontproperties=fp)
-    ax1.set_ylabel('Total perticipant')
+    ax1.set_ylabel('Total perticipants')
     ax2.set_ylabel('Works')
     ax1.legend([p1, p2], ['Total perticipants', 'Works'], loc='upper left')
     plt.savefig('html/chart-en.svg')
@@ -836,7 +840,6 @@ def generate_date_html(date='', fetch=True):
     with open(themes_file) as f:
         fcntl.flock(f, fcntl.LOCK_SH)
         themes = yaml.load(f)
-    print(date)
     theme = themes[date]['theme']
 
     with open(date_html_template_file) as g:
@@ -864,7 +867,8 @@ def generate_date_html(date='', fetch=True):
         tweets = reversed(tweets)
     
     tweet_htmls = {}
-    api_remaining, api_reset = get_show_status_remaining()
+    if fetch:
+        api_remaining, api_reset = get_show_status_remaining()
     count = 0
     for tweet in tweets:
         count += 1
@@ -876,7 +880,7 @@ def generate_date_html(date='', fetch=True):
         if not tweet: # if the tweet is deleted, locked, or something
             continue
 
-        linked_text = tweet['tweet']['text'].replace('#プリキュア版深夜の真剣お絵描き60分一本勝負', r'<a href="https://twitter.com/search?q=%23%E3%83%97%E3%83%AA%E3%82%AD%E3%83%A5%E3%82%A2%E7%89%88%E6%B7%B1%E5%A4%9C%E3%81%AE%E7%9C%9F%E5%89%A3%E3%81%8A%E7%B5%B5%E6%8F%8F%E3%81%8D60%E5%88%86%E4%B8%80%E6%9C%AC%E5%8B%9D%E8%B2%A0&amp;src=hash" class="hashtag customisable">#<b>プリキュア版深夜の真剣お絵描き60分一本勝負</b></a>')
+        linked_text = tweet['tweet']['text'].replace('#プリキュア版深夜の真剣お絵描き60分一本勝負', r'<a href="https://twitter.com/search?q=%23%E3%83%97%E3%83%AA%E3%82%AD%E3%83%A5%E3%82%A2%E7%89%88%E6%B7%B1%E5%A4%9C%E3%81%AE%E7%9C%9F%E5%89%A3%E3%81%8A%E7%B5%B5%E6%8F%8F%E3%81%8D60%E5%88%86%E4%B8%80%E6%9C%AC%E5%8B%9D%E8%B2%A0&amp;src=hash"">#プリキュア版深夜の真剣お絵描き60分一本勝負</a>')
 
         # replace t.co to display_url and linkify
         if 'media' in tweet['tweet']['entities']: # tweet has official image
@@ -999,16 +1003,22 @@ def generate_user_html_all():
         fcntl.flock(f, fcntl.LOCK_SH)
         ignores = yaml.load(f)
     tweets = get_tweets()
+    
+    # select all the condidates
     users = set([tweet['tweet']['user']['screen_name'] for tweet in tweets
                 if tweet['tweet']['user']['screen_name'] not in ignores['deny_collection_user']
                 and tweet['tweet']['user']['id'] not in ignores['deny_collection_user']
                 and tweet['tweet']['user']['screen_name'] not in ignores['deny_collection_gallery_user']
                 and tweet['tweet']['user']['id'] not in ignores['deny_collection_gallery_user']
                 ])
+    
+    os.chdir(html_dir + 'user/')
     for screen_name in users:
-        #print('Generating page of', screen_name)
+        # -1 means getting item from the latest tweet
         user_id = [tweet for tweet in tweets if tweet['tweet']['user']['screen_name'] == screen_name][-1]['tweet']['user']['id']
-        user_tweets = [tweet for tweet in tweets if tweet['tweet']['user']['id'] == user_id]
+        user_tweets = [tweet for tweet in tweets if (tweet['tweet']['user']['id'] == user_id) and (tweet['removed'] == '0')]
+        if not user_tweets:
+            continue
         name = user_tweets[-1]['tweet']['user']['name']
         imgs = []
         for tweet in reversed(user_tweets):
@@ -1024,7 +1034,7 @@ def generate_user_html_all():
                     imgs.append('<a href={link}><figure><img class="gallery" src="{src}"><figcaption>{caption}</figcaption></figure></a>'.format(link=link, src=src, caption=caption))
       
         html = template.format(name=name, screen_name=screen_name, imgs='\n\n'.join(imgs), last_update=last_update())
-        with open(html_dir + 'user/' + screen_name + '.html', 'w') as f:
+        with open(screen_name + '.html', 'w') as f:
             f.write(html)
 
 def fav_plus_rt(tweet):
@@ -1071,7 +1081,7 @@ def generate_rank_html():
             ax.set_xlabel('Fav+RT', fontproperties=fp)
             ax.set_ylabel('人数', fontproperties=fp)
             save_dir = html_dir + 'user/rank/' + screen_name
-            if not os.path.exists(save_dir):
+            if not path.exists(save_dir):
                 os.mkdir(save_dir)
             filename = date + '.svg'
             plt.savefig(html_dir + 'user/rank/' + screen_name + '/' + filename)
