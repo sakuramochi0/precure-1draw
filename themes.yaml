@@ -1,4 +1,4 @@
-0-misc: {num: 30, theme: テーマ外のイラスト, togetter: '', user_num: 0}
+0-misc: {num: 32, theme: テーマ外のイラスト, togetter: '', user_num: 0}
 '2014-04-19': {num: 3, theme: 夢原のぞみ/キュアドリーム, togetter: '', user_num: 3}
 '2014-04-20': {num: 6, theme: 白雪ひめ/ヒメルダ・ウインドウ・キュアクイーン・オブ・ザ・ブルースカイ/キュアプリンセス, togetter: '',
   user_num: 7}
@@ -129,3 +129,11 @@
   user_num: 788}
 '2014-07-11': {num: 58, theme: サンクルミエール学園, togetter: 'http://togetter.com/li/691554',
   user_num: 789}
+'2014-07-12': {num: 90, theme: 紫のプリキュア, togetter: 'http://togetter.com/li/692033',
+  user_num: 797}
+'2014-07-13': {num: 97, theme: 南野奏/キュアリズム, togetter: 'http://togetter.com/li/692515',
+  user_num: 806}
+'2014-07-14': {num: 53, theme: 戦闘シーン, togetter: 'http://togetter.com/li/693022', user_num: 810}
+'2014-07-15': {num: 53, theme: 休日, togetter: 'http://togetter.com/li/693409', user_num: 815}
+'2014-07-16': {num: 116, theme: ツインテール, togetter: 'http://togetter.com/li/693904',
+  user_num: 828}
