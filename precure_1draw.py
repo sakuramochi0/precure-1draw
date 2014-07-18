@@ -161,8 +161,9 @@ def retweet_and_record(tweet=False, id=False, retweet=True, fetch=True, exceptio
             deny_retweet = False
             if retweet and not retweeted:
                 try:
-                    t.retweet(id=tweet['tweet']['id'])
-                    retweeted = True
+                    res = t.retweet(id=tweet['tweet']['id'])
+                    if res['retweeted']:
+                        retweeted = True
                 except TwythonError as e:
                     if e.error_code == 403:
                         print('Double retweet:', tweet['tweet']['id'])
@@ -434,7 +435,7 @@ def get_tweets(date='', screen_name=''):
         ts = [t for t in con.execute('select * from tweets order by id')]
 
     if not ts:
-        print('There is no tweets in the database.')
+        # print('There is no tweets in the database.')
         return None
     else:
         return ts
@@ -840,6 +841,9 @@ def generate_date_html(date='', fetch=True):
     with open(themes_file) as f:
         fcntl.flock(f, fcntl.LOCK_SH)
         themes = yaml.load(f)
+    if date not in themes:
+        # print('There is no tweet of the day.')
+        return
     theme = themes[date]['theme']
 
     with open(date_html_template_file) as g:
@@ -852,10 +856,9 @@ def generate_date_html(date='', fetch=True):
     # generate html
     date_tweets = get_tweets(date)
     tweets = []
+
     if not date_tweets:
-        print('There is no tweet of the day.')
         return
-    
     for tweet in date_tweets:
         if (not tweet['deny_collection']) and (tweet['removed'] == '0') and (not tweet['tweet']['user']['screen_name'] == 'precure_1draw'): # condition to collection
             tweets.append(tweet)
@@ -880,7 +883,8 @@ def generate_date_html(date='', fetch=True):
         if not tweet: # if the tweet is deleted, locked, or something
             continue
 
-        linked_text = tweet['tweet']['text'].replace('#プリキュア版深夜の真剣お絵描き60分一本勝負', r'<a href="https://twitter.com/search?q=%23%E3%83%97%E3%83%AA%E3%82%AD%E3%83%A5%E3%82%A2%E7%89%88%E6%B7%B1%E5%A4%9C%E3%81%AE%E7%9C%9F%E5%89%A3%E3%81%8A%E7%B5%B5%E6%8F%8F%E3%81%8D60%E5%88%86%E4%B8%80%E6%9C%AC%E5%8B%9D%E8%B2%A0&amp;src=hash"">#プリキュア版深夜の真剣お絵描き60分一本勝負</a>')
+        # remove tag
+        linked_text = re.sub('\s*#プリキュア版深夜の真剣お絵描き60分一本勝負\s*', ' ', tweet['tweet']['text'])
 
         # replace t.co to display_url and linkify
         if 'media' in tweet['tweet']['entities']: # tweet has official image
@@ -988,7 +992,7 @@ def generate_date_html_all():
         fcntl.flock(f, fcntl.LOCK_SH)
         themes = yaml.load(f)
 
-    for date in sorted(themes):
+    for date in reversed(sorted(themes)):
         print('Updating:', date)
         generate_date_html(date=date, fetch=False)
 
@@ -1026,8 +1030,9 @@ def generate_user_html_all():
                 if img['filename']:
                     src = '../' + img_dir + tweet['tweet']['user']['id_str'] + '/' + img['filename']
                     labels = get_labels_html(tweet, extra_class='user-label')
+                    date = tweet['date'] if tweet['date'] != '0-misc' else ''
                     try:
-                        caption = '{labels}{date}<br>{theme}'.format(labels=labels, date=tweet['date'], theme=themes[tweet['date']]['theme'])
+                        caption = '{labels}{date}<br>{theme}'.format(labels=labels, date=date, theme=themes[tweet['date']]['theme'])
                     except:
                         pprint(tweet['tweet'])
                     link = 'https://twitter.com/{}/status/{}'.format(tweet['tweet']['user']['screen_name'] ,tweet['id'])
@@ -1245,11 +1250,11 @@ def action_ignore_user(id, un=False):
 
         tweet = get_id_tweet(id)
         if not un:
-            ignores['ignore_user'].append(tweet[id]['user']['id'])
-            ignores['ignore_user'].append(tweet[id]['user']['screen_name'])
+            ignores['ignore_user'].append(tweet['tweet']['user']['id'])
+            ignores['ignore_user'].append(tweet['tweet']['user']['screen_name'])
         else:
-            ignores['ignore_user'].remove(tweet[id]['user']['id'])
-            ignores['ignore_user'].remove(tweet[id]['user']['screen_name'])
+            ignores['ignore_user'].remove(tweet['tweet']['user']['id'])
+            ignores['ignore_user'].remove(tweet['tweet']['user']['screen_name'])
 
         f.seek(0)
         f.truncate()
@@ -1279,9 +1284,31 @@ def import_statuses(file):
     for tweet in tweets:
         retweet_and_record(tweet=tweet, retweet=False, exception=True)
 
+def api_get_tweets(screen_name=''):
+    """
+    Get user timeline as much as possible.
+    Return: list of tweets
+    """
+    tweets = []
+    max_id = None
+    duplicate = 0
+    for i in range(1, 30):
+        res = t.get_user_timeline(screen_name=screen_name, count=200, max_id=max_id)
+        tweets.extend(res)
+        if max_id == res[-1]['id']:
+            duplicate += 1
+            print('duplicate', duplicate)
+            if duplicate > 1:
+                break
+        else:
+            duplicate = 0
+            max_id = res[-1]['id']
+            print('{}回目 max_id: {}'.format(i, max_id))
+    return tweets
+        
 def get_tweets_from_precure_1draw():
     tweets = []
-    max_id=None
+    max_id = None
     duplicate = 0
     for i in range(1, 30):
         res = t.get_user_timeline(screen_name='precure_1draw', count=200, max_id=max_id)
@@ -1310,9 +1337,16 @@ def import_tweets_from_precure_1draw():
         
 def show_status(id):
     if has_id(id):
-        pprint([x for x in get_id_tweet(id)])
+        tweet = get_id_tweet(id)
+        for key in tweet.keys():
+            print('-' * 8)
+            print(key)
+            pprint(tweet[key])
+        print('https://twitter.com/{}/statuses/{}'.format(tweet[1]['user']['screen_name'], tweet[1]['id']))
     else:
-        pprint(t.show_status(id=id))
+        tweet = t.show_status(id=id)
+        pprint(tweet)
+        print('https://twitter.com/{}/statuses/{}'.format(tweet['user']['screen_name'], tweet['id']))
 
 # deprecated
 def db_import_from_json(file):
