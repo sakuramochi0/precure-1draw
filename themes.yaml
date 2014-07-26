@@ -1,141 +1,204 @@
-0-misc: {num: 32, theme: テーマ外のイラスト, togetter: '', user_num: 0}
-'2014-04-19': {num: 3, theme: 夢原のぞみ/キュアドリーム, togetter: '', user_num: 3}
-'2014-04-20': {num: 6, theme: 白雪ひめ/ヒメルダ・ウインドウ・キュアクイーン・オブ・ザ・ブルースカイ/キュアプリンセス, togetter: '',
+0-misc: {num: 32, theme: テーマ外のイラスト, theme_en: Illusts out of themes, togetter: '',
+  user_num: 0}
+'2014-04-19': {num: 3, theme: 夢原のぞみ/キュアドリーム, theme_en: Yumehara Nozomi / Cure Dream,
+  togetter: '', user_num: 3}
+'2014-04-20': {num: 6, theme: 白雪ひめ/ヒメルダ・ウインドウ・キュアクイーン・オブ・ザ・ブルースカイ/キュアプリンセス, theme_en: Shirayuki
+    Hime / Himelda Window Curequeen of the Blue Sky / Cure Princess, togetter: '',
   user_num: 7}
-'2014-04-21': {num: 6, theme: バッドエンド王国, togetter: '', user_num: 10}
-'2014-04-22': {num: 5, theme: '♯キボウレインボウ♯(歌:池田彩)', togetter: '', user_num: 13}
-'2014-04-23': {num: 6, theme: 東せつな/キュアパッション, togetter: '', user_num: 18}
-'2014-04-24': {num: 7, theme: 'あなたの鏡(歌:キュアビューティ-青木れいか(西村ちなみ))', togetter: '', user_num: 19}
-'2014-04-25': {num: 12, theme: 黄色のプリキュア, togetter: '', user_num: 25}
-'2014-04-26': {num: 12, theme: 雪城ほのか/キュアホワイト, togetter: '', user_num: 31}
-'2014-04-27': {num: 18, theme: 円亜久里/キュアエース, togetter: '', user_num: 37}
-'2014-04-28': {num: 10, theme: 'まかせて★スプラッシュ☆スター★(歌:うちやえゆか with Splash Stars)', togetter: '',
-  user_num: 38}
-'2014-04-29': {num: 22, theme: 花咲つぼみ/キュアブロッサム, togetter: '', user_num: 49}
-'2014-04-30': {num: 19, theme: 黒川エレン/セイレーン/キュアビート, togetter: '', user_num: 54}
-'2014-05-01': {num: 11, theme: '手と手つないでハートもリンク!!(歌:宮本佳那子)', togetter: '', user_num: 57}
-'2014-05-02': {num: 25, theme: 四葉ありす/キュアロゼッタ, togetter: '', user_num: 67}
-'2014-05-03': {num: 19, theme: 決め技(個人技), togetter: '', user_num: 70}
-'2014-05-04': {num: 21, theme: こころをこめて(歌キュアソード-剣崎真琴(宮本佳那子)), togetter: '', user_num: 75}
-'2014-05-05': {num: 23, theme: 赤のプリキュア・オレンジのプリキュア, togetter: '', user_num: 82}
-'2014-05-06': {num: 14, theme: 明堂院いつき/キュアサンシャイン, togetter: '', user_num: 83}
-'2014-05-07': {num: 23, theme: 日向咲/キュアブルーム/キュアブライト, togetter: '', user_num: 88}
-'2014-05-08': {num: 32, theme: しあわせごはん愛の歌(キュアハニー-大森ゆうこ(北川里奈)), togetter: '', user_num: 99}
-'2014-05-09': {num: 24, theme: 'ゲッチュウ! らぶらぶぅ?!(歌:五條真由美)', togetter: '', user_num: 103}
-'2014-05-10': {num: 42, theme: 山吹祈里/キュアパイン, togetter: '', user_num: 116}
-'2014-05-11': {num: 47, theme: ジョナサン・クロンダイク/ジョー岡田, togetter: '', user_num: 130}
-'2014-05-12': {num: 55, theme: 北条響/キュアメロディ, togetter: '', user_num: 142}
-'2014-05-13': {num: 39, theme: お母さん, togetter: '', user_num: 148}
-'2014-05-14': {num: 75, theme: 黄瀬やよい/キュアピース, togetter: '', user_num: 177}
-'2014-05-15': {num: 60, theme: 蒼乃美希/キュアベリー, togetter: '', user_num: 192}
-'2014-05-16': {num: 48, theme: 'ガンバランスdeダンスシリーズ(歌:五條真由美他)', togetter: '', user_num: 202}
-'2014-05-17': {num: 87, theme: 変身, togetter: '', user_num: 218}
-'2014-05-18': {num: 93, theme: 星空みゆき/キュアハッピー, togetter: '', user_num: 242}
-'2014-05-19': {num: 90, theme: 水無月かれん/キュアアクア, togetter: '', user_num: 261}
-'2014-05-20': {num: 134, theme: レジーナ, togetter: '', user_num: 297}
-'2014-05-21': {num: 96, theme: 九条ひかり/シャイニールミナス, togetter: '', user_num: 312}
-'2014-05-22': {num: 117, theme: プリキュアオールスターズNewStageシリーズ, togetter: '', user_num: 333}
-'2014-05-23': {num: 75, theme: 東せつな/キュアパッション, togetter: 'http://togetter.com/li/671048',
-  user_num: 357}
-'2014-05-24': {num: 92, theme: バッドエンド王国, togetter: 'http://togetter.com/li/671468',
+'2014-04-21': {num: 6, theme: バッドエンド王国, theme_en: Bad end kingdam, togetter: '', user_num: 10}
+'2014-04-22': {num: 5, theme: '♯キボウレインボウ♯(歌:池田彩)', theme_en: '#Kibou Rainbow# (song
+    by Ikeda Aya)', togetter: '', user_num: 13}
+'2014-04-23': {num: 6, theme: 東せつな/キュアパッション, theme_en: Higashi Setsuna / Cure Passion,
+  togetter: '', user_num: 18}
+'2014-04-24': {num: 7, theme: 'あなたの鏡(歌:キュアビューティ-青木れいか(西村ちなみ))', theme_en: Anata No
+    Kagami (song by Reika Aoki / Nishimura Chinami), togetter: '', user_num: 19}
+'2014-04-25': {num: 12, theme: 黄色のプリキュア, theme_en: Yellow Cures, togetter: '', user_num: 25}
+'2014-04-26': {num: 12, theme: 雪城ほのか/キュアホワイト, theme_en: Yukishiro Honoka / Cure White,
+  togetter: '', user_num: 31}
+'2014-04-27': {num: 18, theme: 円亜久里/キュアエース, theme_en: Madoka Aguri / Cure Ace, togetter: '',
+  user_num: 37}
+'2014-04-28': {num: 10, theme: 'まかせて★スプラッシュ☆スター★(歌:うちやえゆか with Splash Stars)', theme_en: Makasete★Splash☆Star★
+    (song by Uchiyae Yuka with Splash Stars), togetter: '', user_num: 38}
+'2014-04-29': {num: 22, theme: 花咲つぼみ/キュアブロッサム, theme_en: Hanasaki Tsubomi / Cure Blossom,
+  togetter: '', user_num: 49}
+'2014-04-30': {num: 19, theme: 黒川エレン/セイレーン/キュアビート, theme_en: Kkurokawa Eren / Cure
+    Beat, togetter: '', user_num: 54}
+'2014-05-01': {num: 11, theme: '手と手つないでハートもリンク!!(歌:宮本佳那子)', theme_en: Te To Te Tsunaide
+    Heart Mo Link!! (song by Miyamoto Kanako), togetter: '', user_num: 57}
+'2014-05-02': {num: 25, theme: 四葉ありす/キュアロゼッタ, theme_en: Yotsuba Alice / Cure Rosetta,
+  togetter: '', user_num: 67}
+'2014-05-03': {num: 18, theme: 決め技(個人技), theme_en: Solo Attacks, togetter: '', user_num: 70}
+'2014-05-04': {num: 21, theme: こころをこめて(歌キュアソード-剣崎真琴(宮本佳那子)), theme_en: Kokoro Wo Komete
+    (song by Kenzaki Makoto / Miyamoto Kanako), togetter: '', user_num: 75}
+'2014-05-05': {num: 21, theme: 赤のプリキュア・オレンジのプリキュア, theme_en: Red and Orange Cures,
+  togetter: '', user_num: 82}
+'2014-05-06': {num: 14, theme: 明堂院いつき/キュアサンシャイン, theme_en: Myoudouin Itsuki / Cure
+    Sunshine, togetter: '', user_num: 83}
+'2014-05-07': {num: 22, theme: 日向咲/キュアブルーム/キュアブライト, theme_en: Hyuga Saki / Cure Bloom
+    / Cure Bright, togetter: '', user_num: 88}
+'2014-05-08': {num: 32, theme: しあわせごはん愛の歌(キュアハニー-大森ゆうこ(北川里奈)), theme_en: Shiawase
+    Gohan Ai No Uta (song by Cure Honey / Oomori Yuuko / Kitagawa Rina), togetter: '',
+  user_num: 99}
+'2014-05-09': {num: 23, theme: 'ゲッチュウ! らぶらぶぅ?!(歌:五條真由美)', theme_en: 'Get You! Love
+    Love?! (song by Gojou Mayumi)', togetter: '', user_num: 103}
+'2014-05-10': {num: 40, theme: 山吹祈里/キュアパイン, theme_en: Yamabuki Inori / Cure Pine,
+  togetter: '', user_num: 116}
+'2014-05-11': {num: 46, theme: ジョナサン・クロンダイク/ジョー岡田, theme_en: Jonathan Klondike / Joe
+    Okada, togetter: '', user_num: 130}
+'2014-05-12': {num: 54, theme: 北条響/キュアメロディ, theme_en: Hoojo Hibiki / Cure Melody,
+  togetter: '', user_num: 142}
+'2014-05-13': {num: 38, theme: お母さん, theme_en: Mothers, togetter: '', user_num: 148}
+'2014-05-14': {num: 75, theme: 黄瀬やよい/キュアピース, theme_en: Kise Yayoi / Cure Piece, togetter: '',
+  user_num: 177}
+'2014-05-15': {num: 60, theme: 蒼乃美希/キュアベリー, theme_en: Aono Miyuki / Cure Berry, togetter: '',
+  user_num: 192}
+'2014-05-16': {num: 48, theme: 'ガンバランスdeダンスシリーズ(歌:五條真由美他)', theme_en: Ganbaransu De
+    Dance series (song by Gojou Mayumi and others), togetter: '', user_num: 202}
+'2014-05-17': {num: 85, theme: 変身, theme_en: Transformation, togetter: '', user_num: 218}
+'2014-05-18': {num: 90, theme: 星空みゆき/キュアハッピー, theme_en: Hoshizora Miyuki / Cure Happy,
+  togetter: '', user_num: 242}
+'2014-05-19': {num: 89, theme: 水無月かれん/キュアアクア, theme_en: Minazuki Karen / Cure Aqua,
+  togetter: '', user_num: 261}
+'2014-05-20': {num: 131, theme: レジーナ, theme_en: Regina, togetter: '', user_num: 297}
+'2014-05-21': {num: 94, theme: 九条ひかり/シャイニールミナス, theme_en: Kujou Hikari / Shiny Luminous,
+  togetter: '', user_num: 312}
+'2014-05-22': {num: 115, theme: プリキュアオールスターズNewStageシリーズ, theme_en: Precure All Stars
+    NewStage series, togetter: '', user_num: 333}
+'2014-05-23': {num: 73, theme: 東せつな/キュアパッション, theme_en: Higashi Setsuna / Cure Passion,
+  togetter: 'http://togetter.com/li/671048', user_num: 357}
+'2014-05-24': {num: 87, theme: バッドエンド王国, theme_en: Bad End Kingdom, togetter: 'http://togetter.com/li/671468',
   user_num: 375}
-'2014-05-25': {num: 134, theme: 夢原のぞみ/キュアドリーム, togetter: 'http://togetter.com/li/671927',
-  user_num: 400}
-'2014-05-26': {num: 82, theme: 運動会(体育の授業・部活動含む), togetter: 'http://togetter.com/li/672367',
-  user_num: 406}
-'2014-05-27': {num: 111, theme: 剣崎真琴/キュアソード, togetter: 'http://togetter.com/li/672746',
-  user_num: 422}
-'2014-05-28': {num: 129, theme: 四葉ありす/キュアロゼッタ, togetter: 'http://togetter.com/li/673105',
-  user_num: 443}
-'2014-05-29': {num: 68, theme: 'DANZEN! ふたりはプリキュア(歌:五條真由美)', togetter: 'http://togetter.com/li/673470',
+'2014-05-25': {num: 131, theme: 夢原のぞみ/キュアドリーム, theme_en: Yumehara Nozomi / Cure Dream,
+  togetter: 'http://togetter.com/li/671927', user_num: 400}
+'2014-05-26': {num: 81, theme: 運動会(体育の授業・部活動含む), theme_en: 'Sports Meet (,P.E., and
+    Clubs)', togetter: 'http://togetter.com/li/672367', user_num: 406}
+'2014-05-27': {num: 100, theme: 剣崎真琴/キュアソード, theme_en: Kenzaki Makoto / Cure Sword,
+  togetter: 'http://togetter.com/li/672746', user_num: 422}
+'2014-05-28': {num: 114, theme: 四葉ありす/キュアロゼッタ, theme_en: Yotsuba Alice / Cure Rosetta,
+  togetter: 'http://togetter.com/li/673105', user_num: 443}
+'2014-05-29': {num: 63, theme: 'DANZEN! ふたりはプリキュア(歌:五條真由美)', theme_en: DANZEN! Hutari
+    Wa Precure (song by Gojou Mayumi), togetter: 'http://togetter.com/li/673470',
   user_num: 452}
-'2014-05-30': {num: 118, theme: 日野あかね/キュアサニー, togetter: 'http://togetter.com/li/673881',
+'2014-05-30': {num: 108, theme: 日野あかね/キュアサニー, theme_en: Hino Akane / Cure Sunny, togetter: 'http://togetter.com/li/673881',
   user_num: 467}
-'2014-05-31': {num: 78, theme: クラスメイト(及び生徒全体), togetter: 'http://togetter.com/li/674309',
-  user_num: 473}
-'2014-06-01': {num: 112, theme: 妖精, togetter: 'http://togetter.com/li/674866', user_num: 487}
-'2014-06-02': {num: 90, theme: 秋元こまち/キュアミント, togetter: 'http://togetter.com/li/675324',
-  user_num: 500}
-'2014-06-03': {num: 135, theme: 調辺アコ/キュアミューズ, togetter: 'http://togetter.com/li/675713',
+'2014-05-31': {num: 75, theme: クラスメイト(及び生徒全体), theme_en: Cures' Classmates (and schoolmates),
+  togetter: 'http://togetter.com/li/674309', user_num: 473}
+'2014-06-01': {num: 104, theme: 妖精, theme_en: Fairies, togetter: 'http://togetter.com/li/674866',
+  user_num: 487}
+'2014-06-02': {num: 86, theme: 秋元こまち/キュアミント, theme_en: Akimoto Komachi / Cure Mint,
+  togetter: 'http://togetter.com/li/675324', user_num: 500}
+'2014-06-03': {num: 124, theme: 調辺アコ/キュアミューズ, theme_en: Shirabe Ako / Cure Muse, togetter: 'http://togetter.com/li/675713',
   user_num: 520}
-'2014-06-04': {num: 105, theme: 春日野うらら/キュアレモネード, togetter: 'http://togetter.com/li/676101',
-  user_num: 529}
-'2014-06-05': {num: 149, theme: 来海えりか/キュアマリン, togetter: 'http://togetter.com/li/676522',
-  user_num: 551}
-'2014-06-06': {num: 63, theme: トリオ・ザ・マイナー, togetter: 'http://togetter.com/li/676927',
+'2014-06-04': {num: 99, theme: 春日野うらら/キュアレモネード, theme_en: Kazugano Urara / Cure Lemonade,
+  togetter: 'http://togetter.com/li/676101', user_num: 529}
+'2014-06-05': {num: 139, theme: 来海えりか/キュアマリン, theme_en: Kurumi Erika / Cure Marine,
+  togetter: 'http://togetter.com/li/676522', user_num: 551}
+'2014-06-06': {num: 60, theme: トリオ・ザ・マイナー, theme_en: Torio the Minor, togetter: 'http://togetter.com/li/676927',
   user_num: 561}
-'2014-06-07': {num: 143, theme: 青のプリキュア, togetter: 'http://togetter.com/li/677371',
+'2014-06-07': {num: 134, theme: 青のプリキュア, theme_en: Blue Cures, togetter: 'http://togetter.com/li/677371',
   user_num: 586}
-'2014-06-08': {num: 108, theme: 愛乃めぐみ/キュアラブリー, togetter: 'http://togetter.com/li/677887',
-  user_num: 595}
-'2014-06-09': {num: 61, theme: '「笑うが勝ち!」でGO!(歌:五條真由美)', togetter: 'http://togetter.com/li/678321',
-  user_num: 600}
-'2014-06-10': {num: 132, theme: 春日野うらら ＆ 黄瀬やよい / ココ ＆ ナッツ / 緑川なお ＆ 青木れいか / 相田マナ ＆
-    菱川六花 / 愛乃めぐみ ＆ 相楽誠司, togetter: 'http://togetter.com/li/678716', user_num: 612}
-'2014-06-11': {num: 110, theme: 夏木りん/キュアルージュ, togetter: 'http://togetter.com/li/679116',
-  user_num: 621}
-'2014-06-12': {num: 87, theme: 決め技(合体技), togetter: 'http://togetter.com/li/679517',
+'2014-06-08': {num: 102, theme: 愛乃めぐみ/キュアラブリー, theme_en: Aino Megumi / Cure Lovely,
+  togetter: 'http://togetter.com/li/677887', user_num: 595}
+'2014-06-09': {num: 58, theme: '「笑うが勝ち!」でGO!(歌:五條真由美)', theme_en: '"Warau Ga Kachi!"
+    De GO! (song by Gojou Mayumi)', togetter: 'http://togetter.com/li/678321', user_num: 600}
+'2014-06-10': {num: 125, theme: 春日野うらら ＆ 黄瀬やよい / ココ ＆ ナッツ / 緑川なお ＆ 青木れいか / 相田マナ ＆
+    菱川六花 / 愛乃めぐみ ＆ 相楽誠司, theme_en: Kazugano Urara & Kise Yayoi / Coco & Nuts / Midorikawa
+    Nao & Aoki Reika / Aida Mana & Hishikawa Rikka / Aino Megumi & Sagara Seiji, togetter: 'http://togetter.com/li/678716',
+  user_num: 612}
+'2014-06-11': {num: 107, theme: 夏木りん/キュアルージュ, theme_en: Natsuki Rin / Cure Rouge,
+  togetter: 'http://togetter.com/li/679116', user_num: 621}
+'2014-06-12': {num: 80, theme: 決め技(合体技), theme_en: Group Attacks, togetter: 'http://togetter.com/li/679517',
   user_num: 630}
-'2014-06-13': {num: 81, theme: ジョナサン・クロンダイク/ジョー岡田, togetter: 'http://togetter.com/li/679897',
+'2014-06-13': {num: 77, theme: ジョナサン・クロンダイク/ジョー岡田, theme_en: Jonathan Clondike, togetter: 'http://togetter.com/li/679897',
   user_num: 633}
-'2014-06-14': {num: 76, theme: お父さん, togetter: 'http://togetter.com/li/680339', user_num: 642}
-'2014-06-15': {num: 113, theme: 緑川なお/キュアマーチ, togetter: 'http://togetter.com/li/680780',
-  user_num: 653}
-'2014-06-16': {num: 52, theme: 'ラブリンク(歌:吉田仁美)', togetter: 'http://togetter.com/li/681228',
-  user_num: 655}
-'2014-06-17': {num: 107, theme: 美墨なぎさ/キュアブラック, togetter: 'http://togetter.com/li/681598',
-  user_num: 666}
-'2014-06-18': {num: 98, theme: 名乗り, togetter: 'http://togetter.com/li/681967', user_num: 672}
-'2014-06-19': {num: 77, theme: 'イェイ! イェイ! イェイ!(歌:吉田仁美)', togetter: 'http://togetter.com/li/682322',
-  user_num: 681}
-'2014-06-20': {num: 86, theme: 緑のプリキュア・白のプリキュア, togetter: 'http://togetter.com/li/682665',
+'2014-06-14': {num: 70, theme: お父さん, theme_en: Fathers, togetter: 'http://togetter.com/li/680339',
+  user_num: 642}
+'2014-06-15': {num: 107, theme: 緑川なお/キュアマーチ, theme_en: Midorikawa Nao / Cure March,
+  togetter: 'http://togetter.com/li/680780', user_num: 653}
+'2014-06-16': {num: 50, theme: 'ラブリンク(歌:吉田仁美)', theme_en: Love Link (song by Yoshida
+    Hitomi), togetter: 'http://togetter.com/li/681228', user_num: 655}
+'2014-06-17': {num: 102, theme: 美墨なぎさ/キュアブラック, theme_en: Misumi Nagisa / Cure Black,
+  togetter: 'http://togetter.com/li/681598', user_num: 666}
+'2014-06-18': {num: 92, theme: 名乗り, theme_en: Introduction Phrases, togetter: 'http://togetter.com/li/681967',
+  user_num: 672}
+'2014-06-19': {num: 72, theme: 'イェイ! イェイ! イェイ!(歌:吉田仁美)', theme_en: Yeah! Yeah! Yeah!
+    (song by Yoshida Hitomi), togetter: 'http://togetter.com/li/682322', user_num: 681}
+'2014-06-20': {num: 83, theme: 緑のプリキュア・白のプリキュア, theme_en: Green and White Cures, togetter: 'http://togetter.com/li/682665',
   user_num: 685}
-'2014-06-21': {num: 108, theme: 桃園ラブ/キュアピーチ, togetter: 'http://togetter.com/li/683148',
-  user_num: 692}
-'2014-06-22': {num: 118, theme: 菱川六花/キュアダイヤモンド, togetter: 'http://togetter.com/li/683588',
-  user_num: 705}
-'2014-06-23': {num: 134, theme: 眼鏡, togetter: 'http://togetter.com/li/684020', user_num: 716}
-'2014-06-24': {num: 100, theme: 夏服(私服), togetter: 'http://togetter.com/li/684425',
+'2014-06-21': {num: 97, theme: 桃園ラブ/キュアピーチ, theme_en: Momozono Love / Cure Peach,
+  togetter: 'http://togetter.com/li/683148', user_num: 692}
+'2014-06-22': {num: 107, theme: 菱川六花/キュアダイヤモンド, theme_en: Hishikawa Rikka / Cure Diamond,
+  togetter: 'http://togetter.com/li/683588', user_num: 705}
+'2014-06-23': {num: 123, theme: 眼鏡, theme_en: Glasses, togetter: 'http://togetter.com/li/684020',
+  user_num: 716}
+'2014-06-24': {num: 96, theme: 夏服(私服), theme_en: Summer Plain Clothes, togetter: 'http://togetter.com/li/684425',
   user_num: 722}
-'2014-06-25': {num: 67, theme: ナイトメア・エターナル, togetter: 'http://togetter.com/li/684844',
+'2014-06-25': {num: 59, theme: ナイトメア・エターナル, theme_en: Nightmare or Eternal, togetter: 'http://togetter.com/li/684844',
   user_num: 727}
-'2014-06-26': {num: 65, theme: 霧生満と霧生薫, togetter: 'http://togetter.com/li/685212',
+'2014-06-26': {num: 61, theme: 霧生満と霧生薫, theme_en: Kiryuu Mitsuru and Kaoru, togetter: 'http://togetter.com/li/685212',
   user_num: 730}
-'2014-06-27': {num: 58, theme: '最高のスマイル(歌:キュアハッピー&amp;キュアサニー&amp;キュアピース&amp;キュアマーチ&amp;キュアビューティ)',
-  togetter: 'http://togetter.com/li/685594', user_num: 732}
-'2014-06-28': {num: 119, theme: 青木れいか/キュアビューティ, togetter: 'http://togetter.com/li/686036',
-  user_num: 740}
-'2014-06-29': {num: 42, theme: ダークフォール, togetter: 'http://togetter.com/li/686487',
+'2014-06-27': {num: 54, theme: '最高のスマイル(歌:キュアハッピー&amp;キュアサニー&amp;キュアピース&amp;キュアマーチ&amp;キュアビューティ)',
+  theme_en: Saikou No Smile (song by Cure Happy & Cure Sunny & Cure Piece & Cure March
+    & Cure Beauty), togetter: 'http://togetter.com/li/685594', user_num: 732}
+'2014-06-28': {num: 115, theme: 青木れいか/キュアビューティ, theme_en: Aoki Reika / Cure Beauty,
+  togetter: 'http://togetter.com/li/686036', user_num: 740}
+'2014-06-29': {num: 40, theme: ダークフォール, theme_en: Dark Fall, togetter: 'http://togetter.com/li/686487',
   user_num: 745}
-'2014-06-30': {num: 83, theme: パワーアップフォーム, togetter: 'http://togetter.com/li/686943',
+'2014-06-30': {num: 79, theme: パワーアップフォーム, theme_en: Upgraded Form, togetter: 'http://togetter.com/li/686943',
   user_num: 746}
-'2014-07-01': {num: 71, theme: '私立アリア学園中学校 ', togetter: 'http://togetter.com/li/687383',
+'2014-07-01': {num: 69, theme: 私立アリア学園中学校, theme_en: Private Aria Academy, togetter: 'http://togetter.com/li/687383',
   user_num: 751}
-'2014-07-02': {num: 81, theme: 美々野くるみ/ミルキィローズ, togetter: 'http://togetter.com/li/687838',
-  user_num: 757}
-'2014-07-03': {num: 74, theme: ブルー または 相楽誠司, togetter: 'http://togetter.com/li/688225',
+'2014-07-02': {num: 78, theme: 美々野くるみ/ミルキィローズ, theme_en: Mimino Kurumi / Milky Rose,
+  togetter: 'http://togetter.com/li/687838', user_num: 757}
+'2014-07-03': {num: 67, theme: ブルー または 相楽誠司, theme_en: Blue or Sagara Seiji, togetter: 'http://togetter.com/li/688225',
   user_num: 759}
-'2014-07-04': {num: 53, theme: 'ハートキャッチ☆パラダイス(歌:工藤真由)', togetter: 'http://togetter.com/li/688617',
-  user_num: 763}
-'2014-07-05': {num: 101, theme: 黒川エレン/セイレーン/キュアビート, togetter: 'http://togetter.com/li/689017',
-  user_num: 770}
-'2014-07-06': {num: 74, theme: 幻影帝国, togetter: 'http://togetter.com/li/689535', user_num: 777}
-'2014-07-07': {num: 65, theme: 願い事, togetter: 'http://togetter.com/li/690030', user_num: 778}
-'2014-07-08': {num: 57, theme: 五星麗奈 または 志久ななみ, togetter: 'http://togetter.com/li/690407',
-  user_num: 784}
-'2014-07-09': {num: 53, theme: 'Let''s!フレッシュプリキュア!(歌:茂家瑞季)', togetter: 'http://togetter.com/li/690785',
-  user_num: 786}
-'2014-07-10': {num: 74, theme: 坂上あゆみ/キュアエコー, togetter: 'http://togetter.com/li/691151',
-  user_num: 789}
-'2014-07-11': {num: 58, theme: サンクルミエール学園, togetter: 'http://togetter.com/li/691554',
+'2014-07-04': {num: 50, theme: 'ハートキャッチ☆パラダイス(歌:工藤真由)', theme_en: Heartcatch☆Paradice
+    (song by Kudou Mayumi), togetter: 'http://togetter.com/li/688617', user_num: 763}
+'2014-07-05': {num: 94, theme: 黒川エレン/セイレーン/キュアビート, theme_en: Kurokawa Eren / Siren
+    / Cure Beat, togetter: 'http://togetter.com/li/689017', user_num: 770}
+'2014-07-06': {num: 65, theme: 幻影帝国, theme_en: Phamtom Empire, togetter: 'http://togetter.com/li/689535',
+  user_num: 777}
+'2014-07-07': {num: 60, theme: 願い事, theme_en: Wishes, togetter: 'http://togetter.com/li/690030',
+  user_num: 778}
+'2014-07-08': {num: 50, theme: 五星麗奈 または 志久ななみ, theme_en: Itsutsuboshi Reina or Shiku
+    Nanami, togetter: 'http://togetter.com/li/690407', user_num: 784}
+'2014-07-09': {num: 45, theme: 'Let''s!フレッシュプリキュア!(歌:茂家瑞季)', theme_en: Let's! Fresh
+    Precure! (song by Moie Mizuki), togetter: 'http://togetter.com/li/690785', user_num: 786}
+'2014-07-10': {num: 66, theme: 坂上あゆみ/キュアエコー, theme_en: Sakagami Ayumi / Cure Echo,
+  togetter: 'http://togetter.com/li/691151', user_num: 789}
+'2014-07-11': {num: 56, theme: サンクルミエール学園, theme_en: L'École des Cinq Lumières, togetter: 'http://togetter.com/li/691554',
   user_num: 790}
-'2014-07-12': {num: 90, theme: 紫のプリキュア, togetter: 'http://togetter.com/li/692033',
+'2014-07-12': {num: 84, theme: 紫のプリキュア, theme_en: Purple Cures, togetter: 'http://togetter.com/li/692033',
   user_num: 798}
-'2014-07-13': {num: 97, theme: 南野奏/キュアリズム, togetter: 'http://togetter.com/li/692515',
+'2014-07-13': {num: 90, theme: 南野奏/キュアリズム, theme_en: Nanno Kanade / Cure Rhythm, togetter: 'http://togetter.com/li/692515',
   user_num: 807}
-'2014-07-14': {num: 53, theme: 戦闘シーン, togetter: 'http://togetter.com/li/693022', user_num: 811}
-'2014-07-15': {num: 53, theme: 休日, togetter: 'http://togetter.com/li/693409', user_num: 816}
-'2014-07-16': {num: 115, theme: ツインテール, togetter: 'http://togetter.com/li/693904',
+'2014-07-14': {num: 52, theme: 戦闘シーン, theme_en: Fighting Sequence, togetter: 'http://togetter.com/li/693022',
+  user_num: 811}
+'2014-07-15': {num: 52, theme: 休日, theme_en: Holiday, togetter: 'http://togetter.com/li/693409',
+  user_num: 816}
+'2014-07-16': {num: 108, theme: ツインテール, theme_en: Pigtails, togetter: 'http://togetter.com/li/693904',
   user_num: 828}
-'2014-07-17': {num: 86, theme: ダークプリキュア・ダークプリキュア5・バッドエンドプリキュア, togetter: 'http://togetter.com/li/694305',
+'2014-07-17': {num: 79, theme: ダークプリキュア・ダークプリキュア5・バッドエンドプリキュア, theme_en: 'Dark Precure,
+    Dark Precures 5 or Badend Precure', togetter: 'http://togetter.com/li/694305',
   user_num: 834}
+'2014-07-18': {num: 41, theme: '夏の流星群(歌:相田マナ(生天目仁美)&amp;菱川六花(寿美菜子))', theme_en: Natsu
+    No Ryuuseigun (song by Aida Mana / Nabatame Hitomi & Hishikawa Rikka / Kotobuki
+    Minako), togetter: 'http://togetter.com/li/694693', user_num: 858}
+'2014-07-19': {num: 69, theme: 氷川いおな/キュアフォーチュン, theme_en: Hikawa Iona / Cure Fortune,
+  togetter: 'http://togetter.com/li/695155', user_num: 867}
+'2014-07-20': {num: 86, theme: 来海えりか ＆ 白雪ひめ / 日向咲 ＆ 美翔舞 / 北条響 ＆ 南野奏 / キャンディ ＆ ポップ
+    / 円亜久里 ＆ レジーナ, theme_en: Kurumi Erika & Shirayuki Hime / Hyuuga Saki & Mishou
+    Mai / Houjou Hibiki & Nanno Kanade / Candy & Pop / Madoka Aguri & Regina, togetter: 'http://togetter.com/li/695656',
+  user_num: 871}
+'2014-07-21': {num: 30, theme: クローバー(ダンスチーム), theme_en: Clover (Dancing Team), togetter: 'http://togetter.com/li/696190',
+  user_num: 876}
+'2014-07-22': {num: 30, theme: プリキュアオールスターズDXシリーズ, theme_en: Precure Allstars DX series,
+  togetter: 'http://togetter.com/li/696641', user_num: 877}
+'2014-07-23': {num: 38, theme: 砂漠の使徒, theme_en: Desert Apostles, togetter: 'http://togetter.com/li/697043',
+  user_num: 877}
+'2014-07-24': {num: 42, theme: 家族(親戚・同居人含む), theme_en: Families, togetter: 'http://togetter.com/li/697443',
+  user_num: 882}
+'2014-07-25': {num: 31, theme: 'プリキュア5、フル・スロットルGoGo!(歌:工藤真由)', theme_en: 'Pretty Cure
+    5, Full Throttle Go Go! (song by Kudou Mayu)', togetter: 'http://togetter.com/li/697795',
+  user_num: 884}
+'2014-07-26': {num: 0, theme: 加音町, theme_en: Kanon Town, togetter: '', user_num: 884}

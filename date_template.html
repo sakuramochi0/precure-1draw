@@ -12,13 +12,15 @@
 <script type="text/javascript" src="../css-changer.js"></script>
 <script type="text/javascript" src="http://www.google.com/jsapi"></script>
 <script type="text/javascript" src="/js/counter.js"></script>
+<script src="/js/lang-switch.js"></script>
 <script src="/js/google-analytics.js"></script>
 </head>
 <body>
 <div id="header">
 <img id="ribbon" src="../img/ribbon-{ribbon_name}.png">
 <h1><a href="../">#プリキュア版深夜の真剣お絵描き60分一本勝負</a></h1>
-<h2>{h2}</h2>
+<h2 class="ja">{h2}</h2>
+<h2 class="en">{h2_en}</h2>
 
 <div class="btn-group list-thumbnail" style="">
   <button id="list" class="btn btn-default active">リスト表示</button>
@@ -32,7 +34,7 @@
 
 <div id="footer">
 <p style="margin-bottom: 6em;">
-  <a href="https://twitter.com/intent/tweet?original_referer=&text={date_str} - {theme} / %23プリキュア版深夜の真剣お絵描き60分一本勝負 まとめのページ&tw_p=tweetbutton&url=http://sakuramochi.mydns.jp/precure/1draw-collections/date/{date}.html">
+  <a href="https://twitter.com/intent/tweet?original_referer=&text={date_str} - {theme_tweet} / プリキュア版深夜の真剣お絵描き60分一本勝負 まとめのページ&tw_p=tweetbutton&url=http://sakuramochi.mydns.jp/precure/1draw-collections/date/{date}.html">
     <button class="btn tweet-btn">
       <i class="fa fa-twitter" style="color: #62aedc;"></i> このページをツイートする
     </button>
