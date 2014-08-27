@@ -16,6 +16,7 @@ from os import path
 from io import BytesIO
 import subprocess
 from pprint import pprint
+import urllib
 
 import pytz
 import yaml
@@ -161,8 +162,9 @@ def retweet_and_record(tweet=False, id=False, retweet=True, fetch=True, exceptio
             deny_retweet = False
             if retweet and not retweeted:
                 try:
-                    t.retweet(id=tweet['tweet']['id'])
-                    retweeted = True
+                    res = t.retweet(id=tweet['tweet']['id'])
+                    if res['retweeted']:
+                        retweeted = True
                 except TwythonError as e:
                     if e.error_code == 403:
                         print('Double retweet:', tweet['tweet']['id'])
@@ -228,7 +230,7 @@ def tweet_filter(tweet, new=False):
     elif tweet['tweet']['id'] in ignores['ignore_id']:
         hit = 'Hit ignore_id:'
     # if ignore_url
-    elif tweet['tweet']['entities']['urls'] and any([ignore_url in url
+    elif tweet['tweet']['entities']['urls'] and any([ignore_url in url['expanded_url']
                                                      for ignore_url in ignores['ignore_url']
                                                      for url in tweet['tweet']['entities']['urls']]):
         hit = 'Hit ignore_url:'
@@ -254,10 +256,10 @@ def tweet_filter(tweet, new=False):
             if re.search(word, tweet['tweet']['text']): 
                 hit += 'Hit ignore_word "{}":'.format(word)
     if hit:
-        print('-' * 16)
-        print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M'))
-        print(hit)
-        print_tweet(None, tweet=tweet)
+        # print('-' * 16)
+        # print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M'))
+        # print(hit)
+        # print_tweet(None, tweet=tweet)
         return False
     else:
         return True
@@ -434,7 +436,7 @@ def get_tweets(date='', screen_name=''):
         ts = [t for t in con.execute('select * from tweets order by id')]
 
     if not ts:
-        print('There is no tweets in the database.')
+        # print('There is no tweets in the database.')
         return None
     else:
         return ts
@@ -535,13 +537,10 @@ def update_themes():
                 if match:
                     themes[date] = {}
                     themes[date]['theme'] = ' / '.join(match)
+                    themes[date]['theme_en'] = ''
                     themes[date]['num'] = 0
                     t.retweet(id=tweet['id'])
         for date in themes:
-            if get_tweets(date):
-                themes[date]['num'] = len(get_tweets(date))
-            else:
-                themes[date]['num'] = 0
             togetter_url = [tweet['tweet']['entities']['urls'][0]['expanded_url']
                             for tweet in tweets
                             if tweet['tweet']['entities']['urls']
@@ -557,7 +556,7 @@ def update_themes():
         yaml.dump(themes, f, allow_unicode=True)
 
     # for use of admin page list
-    with open(themes_file_admin, 'w') as f:
+    with open(html_dir + 'date/' + themes_file, 'w') as f:
         fcntl.flock(f, fcntl.LOCK_EX)
         json.dump(themes, f, ensure_ascii=False)
 
@@ -575,7 +574,7 @@ def update_user_nums():
             else:
                 tweets = get_tweets(date)
                 if tweets:
-                    users.extend([t['tweet']['user']['id'] for t in tweets])
+                    users.extend([t['tweet']['user']['id'] for t in tweets if tweet_filter(t)])
                     themes[date]['user_num'] = len(set(users))
                 else:
                     themes[date]['user_num'] = len(set(users))
@@ -636,6 +635,7 @@ def update_labels(id, force=False):
     
     # lucky number
     num = get_user_work_number(id)
+    print(num)
     if num == 1:
         labels.append('初参加')
     else:
@@ -722,29 +722,44 @@ def chart():
     nums = [ts[day]['num'] for day in sorted(ts) if day != '0-misc']
     user_nums = [ts[day]['user_num'] for day in sorted(ts) if day != '0-misc']
      
+    # ax1: works num, ax2: user num
+    fig, ax = plt.subplots()
+
     ax1 = plt.axes()
     ax2 = ax1.twinx()
      
     ax1.plot(days, user_nums, '.-', color='lightsteelblue', linewidth=2)
     ax2.plot(days, nums, '.-', color='palevioletred', linewidth=2)
-     
+
+    fig.autofmt_xdate()
+
+    # set limit
     ax1.set_xlim(0, max(days) + 1)
     ax1.set_ylim(0, max(user_nums) + 30)
-    ax1.xaxis.set_major_locator(plt.MultipleLocator(5))
-    ax1.yaxis.set_major_locator(plt.MultipleLocator(50))
     ax2.set_ylim(0, max(nums) + 15)
+
+    #ax1.set_xticklabels(rotation=45)
+
+    # set locator
+    ax1.xaxis.set_major_locator(plt.MultipleLocator(5))
+    ax1.yaxis.set_major_locator(plt.MultipleLocator(100))
     ax2.xaxis.set_major_locator(plt.MultipleLocator(5))
     ax2.yaxis.set_major_locator(plt.MultipleLocator(25))
+
+    # set grid
     ax2.grid(True)
-     
+
+    # label
     fp = FontProperties(fname='Hiragino Sans GB W3.otf')
     ax1.set_xlabel('回数', fontproperties=fp)
     ax1.set_ylabel('累計参加者数', fontproperties=fp)
     ax2.set_ylabel('作品数', fontproperties=fp)
      
+    # legend
     p1 = plt.Rectangle((0, 0), 1, 1, fc="lightsteelblue")
     p2 = plt.Rectangle((0, 0), 1, 1, fc="palevioletred")
     ax1.legend([p1, p2], ['累計参加者数', '作品数'], loc='upper left', prop=fp)
+
      
     #plt.title('作品数の変化', fontproperties=fp)
     plt.savefig('html/chart.svg')
@@ -762,6 +777,8 @@ def generate_index_html():
     locale.setlocale(locale.LC_ALL, '')
     with open(index_html_template_file) as f:
         index_html_template = f.read()
+
+    # infomartion board
     with open('info.yaml') as f:
         infos = yaml.load(f)
     soup = BeautifulSoup()
@@ -784,13 +801,14 @@ def generate_index_html():
         tr.append(td)
         info_table.append(tr)
 
+    # main
     with open(themes_file) as f:
         fcntl.flock(f, fcntl.LOCK_SH)
         themes = yaml.load(f)
     for ribbon_name in ribbon_names:
         trs = []
         for num, (date, item) in enumerate(reversed(sorted(themes.items()))):
-            num = len(themes) - num -1
+            num = len(themes) - num - 1
 
             if date == '0-misc':
                 date_str = '-'
@@ -800,8 +818,15 @@ def generate_index_html():
 
             if path.exists(html_dir + 'date/' + ribbon_name + date + '.html'):
                 link = '<a href="date/{ribbon_name}{date}.html">{theme}</a>'.format(ribbon_name=ribbon_name, date=date, theme=item['theme'])
+                if item['theme_en']:
+                    link_en = '<a href="date/{ribbon_name}{date}.html">{theme_en}</a>'.format(ribbon_name=ribbon_name, date=date, theme_en=item['theme_en'])
+                else:
+                    link_en = '<a href="date/{ribbon_name}{date}.html">{theme}</a>'.format(ribbon_name=ribbon_name, date=date, theme=item['theme'])
             else:
                 link = item['theme']
+                link_en = item['theme_en']
+                if not link_en:
+                    link_en = item['theme']
 
             if item['num'] == 0:
                 work_num = '-'
@@ -817,12 +842,13 @@ def generate_index_html():
             <td class="num">#{num:2d}</td>
             <td class="date ja">{date_str}</td>
             <td class="date en">{date_str_en}</td>
-            <td class="theme">{link}</td>
+            <td class="theme ja">{link}</td>
+            <td class="theme en">{link_en}</td>
             <td class="work_num">{work_num}</td>
             <td class="togetter">
               {togetter}
             </td>
-            </tr>'''.format(num=num, date_str=date_str, date_str_en=date_str_en, link=link, theme=item['theme'], work_num=work_num, togetter=togetter)
+            </tr>'''.format(num=num, date_str=date_str, date_str_en=date_str_en, link=link, link_en=link_en, work_num=work_num, togetter=togetter)
             trs.append(tr)
         html = index_html_template.format(info_table=info_table,
                                           ribbon_name=ribbon_name[:-1],
@@ -840,7 +866,13 @@ def generate_date_html(date='', fetch=True):
     with open(themes_file) as f:
         fcntl.flock(f, fcntl.LOCK_SH)
         themes = yaml.load(f)
+    if date not in themes:
+        # print('There is no tweet of the day.')
+        return
     theme = themes[date]['theme']
+    theme_en = themes[date]['theme_en']
+    if not theme_en:
+        theme_en = themes[date]['theme']
 
     with open(date_html_template_file) as g:
         date_html_template = g.read()
@@ -852,10 +884,9 @@ def generate_date_html(date='', fetch=True):
     # generate html
     date_tweets = get_tweets(date)
     tweets = []
+
     if not date_tweets:
-        print('There is no tweet of the day.')
         return
-    
     for tweet in date_tweets:
         if (not tweet['deny_collection']) and (tweet['removed'] == '0') and (not tweet['tweet']['user']['screen_name'] == 'precure_1draw'): # condition to collection
             tweets.append(tweet)
@@ -876,11 +907,13 @@ def generate_date_html(date='', fetch=True):
             sleep_until_api_reset()
             count = 0
             api_remaining, api_reset = get_show_status_remaining()
+
         tweet = retweet_and_record(id=tweet['id'], retweet=False, fetch=fetch)
         if not tweet: # if the tweet is deleted, locked, or something
             continue
 
-        linked_text = tweet['tweet']['text'].replace('#プリキュア版深夜の真剣お絵描き60分一本勝負', r'<a href="https://twitter.com/search?q=%23%E3%83%97%E3%83%AA%E3%82%AD%E3%83%A5%E3%82%A2%E7%89%88%E6%B7%B1%E5%A4%9C%E3%81%AE%E7%9C%9F%E5%89%A3%E3%81%8A%E7%B5%B5%E6%8F%8F%E3%81%8D60%E5%88%86%E4%B8%80%E6%9C%AC%E5%8B%9D%E8%B2%A0&amp;src=hash"">#プリキュア版深夜の真剣お絵描き60分一本勝負</a>')
+        # remove tag
+        linked_text = re.sub('\n?\s*#プリキュア版深夜の真剣お絵描き60分一本勝負\s*\n?', ' ', tweet['tweet']['text'])
 
         # replace t.co to display_url and linkify
         if 'media' in tweet['tweet']['entities']: # tweet has official image
@@ -940,22 +973,37 @@ def generate_date_html(date='', fetch=True):
                 tweet_htmls[ribbon_name] = []
             tweet_htmls[ribbon_name].append(tweet_html)
 
+    # update theme num
+    with open(themes_file, 'r+') as f:
+        fcntl.flock(f, fcntl.LOCK_EX)
+        themes = yaml.load(f)
+        themes[date]['num'] = len(tweet_htmls[''])
+        f.seek(0)
+        f.truncate()
+        yaml.dump(themes, f, allow_unicode=True)
+
     if date == '0-misc':
         date_str = ''
         num = ''
-        h2 = '{theme}のまとめ'.format(date_str=date_str, theme=theme)
+        h2 = '{theme}のまとめ'.format(theme=theme)
+        h2_en = 'Collections of {theme_en}'.format(theme_en=theme_en)
     else:
         date_str = parse(date).strftime('%Y年%m月%d日')
+        date_str_en = parse(date).strftime('<span class="year">%Y/</span>%m/%d')
         num = '第{}回'.format(sorted(themes).index(date))
         h2 = '{date_str}のまとめ<br />テーマ: {theme}'.format(date_str=date_str, theme=theme)
+        h2_en = 'Collections on {date_str_en}<br />Theme: {theme_en}'.format(date_str_en=date_str_en, theme_en=theme_en)
     for ribbon_name in ribbon_names:
         tweets_html = '\n\n'.join(tweet_htmls[ribbon_name])
         html = date_html_template.format(ribbon_name=ribbon_name[:-1],
                                          h2=h2,
+                                         h2_en=h2_en,
                                          num=num,
                                          date=date,
                                          date_str=date_str,
                                          theme=theme,
+                                         theme_en=theme_en,
+                                         theme_tweet=urllib.parse.quote(theme),
                                          tweets=tweets_html,
                                          last_update=last_update())
                                          
@@ -988,7 +1036,7 @@ def generate_date_html_all():
         fcntl.flock(f, fcntl.LOCK_SH)
         themes = yaml.load(f)
 
-    for date in sorted(themes):
+    for date in reversed(sorted(themes)):
         print('Updating:', date)
         generate_date_html(date=date, fetch=False)
 
@@ -1026,8 +1074,9 @@ def generate_user_html_all():
                 if img['filename']:
                     src = '../' + img_dir + tweet['tweet']['user']['id_str'] + '/' + img['filename']
                     labels = get_labels_html(tweet, extra_class='user-label')
+                    date = tweet['date'] if tweet['date'] != '0-misc' else ''
                     try:
-                        caption = '{labels}{date}<br>{theme}'.format(labels=labels, date=tweet['date'], theme=themes[tweet['date']]['theme'])
+                        caption = '{labels}{date}<br><span class="ja">{theme}</span><span class="en">{theme_en}</span>'.format(labels=labels, date=date, theme=themes[tweet['date']]['theme'], theme_en=themes[tweet['date']]['theme_en'])
                     except:
                         pprint(tweet['tweet'])
                     link = 'https://twitter.com/{}/status/{}'.format(tweet['tweet']['user']['screen_name'] ,tweet['id'])
@@ -1071,6 +1120,8 @@ def generate_rank_html():
             fig, ax = plt.subplots()
             n, bins, patches = plt.hist(frs[date], color='skyblue', bins=50)
             idx = (np.abs(bins - fav)).argmin()
+            idx = min(idx, len(patches)-1)
+            #print(idx, patches)
             if patches[idx].get_height():
                 patches[idx].set_facecolor('palevioletred')
             elif patches[idx+1].get_height():
@@ -1093,7 +1144,7 @@ def generate_rank_html():
          
             imgs.append('''<p style="margin-left: 4em;">{}{} - {}<br>Fav+RT: {}<br>Rank: {} / {} ({}%)</p>
             <img src="{img}" style="max-width: 500px;">
-            <img id="{src}" src="{src}">'''.format(get_labels_html(tweet, extra_class='user-label'), date, themes[date]['theme'], fav, rank, total, percent, src=screen_name + '/' + filename, img='/precure/1draw-collections/img/{}/{}'.format(tweet['tweet']['user']['id'], tweet['imgs'][0]['filename'])))
+            <img id="{src}" src="{src}">'''.format(get_labels_html(tweet, extra_class='user-label'), date, themes[date]['theme'], fav, rank+1, total, percent, src=screen_name + '/' + filename, img='/precure/1draw-collections/img/{}/{}'.format(tweet['tweet']['user']['id'], tweet['imgs'][0]['filename'])))
      
         with open('rank_template.html') as f:
             template = f.read()
@@ -1155,7 +1206,7 @@ def actions_history_tr(time, actions):
     elif action == 'remove':
         action = 'まとめから削除する'
     elif action == 'ignore_user':
-        action = action['']
+        action = '迷惑ユーザーに追加する'
     elif action == 'move':
         with open(themes_file) as f:
             fcntl.flock(f, fcntl.LOCK_EX)
@@ -1225,11 +1276,11 @@ def action_deny_collection_user(id, un=False):
 
         tweet = get_id_tweet(id)
         if not un:
-            ignores['deny_collection'].append(tweet['tweet']['user']['id'])
-            ignores['deny_collection'].append(tweet['tweet']['user']['screen_name'])
+            ignores['deny_collection_user'].append(tweet['tweet']['user']['id'])
+            ignores['deny_collection_user'].append(tweet['tweet']['user']['screen_name'])
         else:
-            ignores['deny_collection'].remove(tweet['tweet']['user']['id'])
-            ignores['deny_collection'].remove(tweet['tweet']['user']['screen_name'])
+            ignores['deny_collection_user'].remove(tweet['tweet']['user']['id'])
+            ignores['deny_collection_user'].remove(tweet['tweet']['user']['screen_name'])
 
         f.seek(0)
         f.truncate()
@@ -1245,11 +1296,11 @@ def action_ignore_user(id, un=False):
 
         tweet = get_id_tweet(id)
         if not un:
-            ignores['ignore_user'].append(tweet[id]['user']['id'])
-            ignores['ignore_user'].append(tweet[id]['user']['screen_name'])
+            ignores['ignore_user'].append(tweet['tweet']['user']['id'])
+            ignores['ignore_user'].append(tweet['tweet']['user']['screen_name'])
         else:
-            ignores['ignore_user'].remove(tweet[id]['user']['id'])
-            ignores['ignore_user'].remove(tweet[id]['user']['screen_name'])
+            ignores['ignore_user'].remove(tweet['tweet']['user']['id'])
+            ignores['ignore_user'].remove(tweet['tweet']['user']['screen_name'])
 
         f.seek(0)
         f.truncate()
@@ -1279,9 +1330,33 @@ def import_statuses(file):
     for tweet in tweets:
         retweet_and_record(tweet=tweet, retweet=False, exception=True)
 
+def api_get_tweets(screen_name=''):
+    """
+    Get user timeline as much as possible.
+    Return: list of tweets
+    """
+    tweets = []
+    max_id = None
+    duplicate = 0
+    for i in range(1, 30):
+        res = t.get_user_timeline(screen_name=screen_name, count=200, max_id=max_id)
+        tweets.extend(res)
+        if max_id == res[-1]['id']:
+            duplicate += 1
+            print('duplicate', duplicate)
+            if duplicate > 1:
+                break
+        else:
+            duplicate = 0
+            max_id = res[-1]['id']
+            print('{}回目 max_id: {}'.format(i, max_id))
+    for tweet in tweets:
+        if '#' in tweet['text']:
+            print(tweet['text'])
+        
 def get_tweets_from_precure_1draw():
     tweets = []
-    max_id=None
+    max_id = None
     duplicate = 0
     for i in range(1, 30):
         res = t.get_user_timeline(screen_name='precure_1draw', count=200, max_id=max_id)
@@ -1310,9 +1385,16 @@ def import_tweets_from_precure_1draw():
         
 def show_status(id):
     if has_id(id):
-        pprint([x for x in get_id_tweet(id)])
+        tweet = get_id_tweet(id)
+        for key in tweet.keys():
+            print('-' * 8)
+            print(key)
+            pprint(tweet[key])
+        print('https://twitter.com/{}/statuses/{}'.format(tweet[1]['user']['screen_name'], tweet[1]['id']))
     else:
-        pprint(t.show_status(id=id))
+        tweet = t.show_status(id=id)
+        pprint(tweet)
+        print('https://twitter.com/{}/statuses/{}'.format(tweet['user']['screen_name'], tweet['id']))
 
 # deprecated
 def db_import_from_json(file):
@@ -1403,14 +1485,15 @@ def check_db(collect=False):
 def fix_db():
     tweets = get_tweets()
     for tweet in tweets:
-        if not tweet['imgs']:
-            print('-' * 16)
-            print('Fix imgs', tweet['id'])
-            store_image(tweet['id'])
-        if not tweet['labels']:
-            print('-' * 16)
-            print('Fix labels', tweet['id'])
-            update_labels(tweet['id'])
+        if tweet['removed'] == '0':
+            if not tweet['imgs']:
+                print('-' * 16)
+                print('Fix imgs', tweet['id'])
+                store_image(tweet['id'])
+            if not tweet['labels']:
+                print('-' * 16)
+                print('Fix labels', tweet['id'])
+                update_labels(tweet['id'])
             
 def follow_back():
     '''Follow back all the followers who are not followed.'''
@@ -1446,7 +1529,6 @@ if __name__ == '__main__':
 
     tweets_file = 'tweets.json'
     themes_file = 'themes.yaml'
-    themes_file_admin = html_dir + 'themes.json'
 
     ignores_file = 'ignores.yaml'
 
