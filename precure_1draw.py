@@ -66,13 +66,17 @@ def auto_retweet_stream():
     '''Retweet all the tweet which have the hash_tag by stream.'''
     stream.statuses.filter(track='#' + hash_tags[0] + ' ' + triger)
 
-def auto_retweet_rest(past=2, retweet=True):
+def auto_retweet_rest(past=3, retweet=True):
     '''Retweet all the tweet which have the hash_tag by rest.'''
     # gather
     max_id=''
     tweets = []
     for i in range(past):
-        res = t.search(q='#' + hash_tags[0] + ' -RT', count=100, result_type='recent', max_id=max_id)
+        try:
+            res = t.search(q='#' + hash_tags[0] + ' -RT', count=100, result_type='recent', max_id=max_id)
+        except TwythonError as e:
+            print('Error occered:', e)
+            continue
         res = res['statuses']
         max_id = res[-1]['id_str']
         for tweet in res:
