@@ -66,7 +66,7 @@ def auto_retweet_stream():
     '''Retweet all the tweet which have the hash_tag by stream.'''
     stream.statuses.filter(track='#' + hash_tags[0] + ' ' + triger)
 
-def auto_retweet_rest(past=3, retweet=True):
+def auto_retweet_rest(past=2, retweet=True):
     '''Retweet all the tweet which have the hash_tag by rest.'''
     # gather
     max_id=''
