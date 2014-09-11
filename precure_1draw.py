@@ -738,12 +738,10 @@ def chart():
     ax1.set_ylim(0, max(user_nums) + 30)
     ax2.set_ylim(0, max(nums) + 15)
 
-    #ax1.set_xticklabels(rotation=45)
-
     # set locator
-    ax1.xaxis.set_major_locator(plt.MultipleLocator(5))
+    ax1.xaxis.set_major_locator(plt.MultipleLocator(10))
     ax1.yaxis.set_major_locator(plt.MultipleLocator(100))
-    ax2.xaxis.set_major_locator(plt.MultipleLocator(5))
+    ax2.xaxis.set_major_locator(plt.MultipleLocator(10))
     ax2.yaxis.set_major_locator(plt.MultipleLocator(25))
 
     # set grid
