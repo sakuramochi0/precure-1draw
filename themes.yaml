@@ -162,7 +162,7 @@
   user_num: 112
 '2014-05-11':
   category: [doki, 6]
-  num: 43
+  num: 42
   theme: ジョナサン・クロンダイク/ジョー岡田
   theme_en: Jonathan Klondike / Joe Okada
   togetter: ''
@@ -665,7 +665,7 @@
   user_num: 800
 '2014-07-21':
   category: [flesh, 20]
-  num: 28
+  num: 27
   theme: クローバー(ダンスチーム)
   theme_en: Clover (Dancing Team)
   togetter: http://togetter.com/li/696190
@@ -707,7 +707,7 @@
   user_num: 806
 '2014-07-27':
   category: [group]
-  num: 162
+  num: 161
   theme: あなたの好きなプリキュアキャラクター
   theme_en: Characters You Like
   togetter: http://togetter.com/li/698813
@@ -735,7 +735,7 @@
   user_num: 840
 '2014-07-31':
   category: [hacha, 2]
-  num: 90
+  num: 89
   theme: 大森ゆうこ/キュアハニー
   theme_en: Oomori Yuuko / Cure Honey
   togetter: http://togetter.com/li/700518
@@ -786,7 +786,7 @@
   category:
   - [fresh, 10]
   - [smile, 11]
-  num: 45
+  num: 44
   theme: ウエスター または ウルフルン
   theme_en: 'Wester / Wulfrun '
   togetter: http://togetter.com/li/703536
@@ -814,7 +814,7 @@
   user_num: 900
 '2014-08-11':
   category: [song]
-  num: 35
+  num: 34
   theme: You make me happy!(歌:林桃子)
   theme_en: You make me happy!(song by Hayashi Momoko)
   togetter: http://togetter.com/li/705248
@@ -828,7 +828,7 @@
   user_num: 903
 '2014-08-13':
   category: ['5', 0]
-  num: 62
+  num: 60
   theme: 夢原のぞみ/キュアドリーム
   theme_en: Yumehara Nozomi / Cure Dream
   togetter: http://togetter.com/li/706097
@@ -849,7 +849,7 @@
   user_num: 911
 '2014-08-16':
   category: [pair]
-  num: 74
+  num: 73
   theme: ジョー岡田 ＆ ブルー / 雪城ほのか ＆ 入澤キリヤ / 夢原のぞみ ＆ 美々野くるみ / 桃園ラブ ＆ 東せつな / 黒川エレン ＆ ハミィ
   theme_en: Joe Okada & Blue / Yukishiro Honoka & Irisawa Kiriya / Yumehara Nozomi
     & Mimino Kurumi / Momozono Love & Higashi Setsuna
@@ -866,7 +866,7 @@
   user_num: 919
 '2014-08-18':
   category: [fresh, 3]
-  num: 79
+  num: 78
   theme: 東せつな/キュアパッション
   theme_en: Higashi Setsuna / Cure Passion
   togetter: http://togetter.com/li/708326
@@ -887,7 +887,7 @@
   user_num: 934
 '2014-08-21':
   category: [smile, 0]
-  num: 97
+  num: 96
   theme: 星空みゆき/キュアハッピー
   theme_en: Hoshizora Miyuki / Cure Happy
   togetter: http://togetter.com/li/709477
@@ -996,5 +996,7 @@
   user_num: 994}
 '2014-09-09': {num: 18, theme: 'ワンダー☆ウインター☆ヤッター!!(歌:五條真由美)', theme_en: '', togetter: 'http://togetter.com/li/717401',
   user_num: 994}
-'2014-09-10': {num: 71, theme: 赤のプリキュア・オレンジのプリキュア, theme_en: '', togetter: 'http://togetter.com/li/717796',
+'2014-09-10': {num: 70, theme: 赤のプリキュア・オレンジのプリキュア, theme_en: '', togetter: 'http://togetter.com/li/717796',
   user_num: 999}
+'2014-09-11': {num: 49, theme: 秋元こまち/キュアミント, theme_en: '', togetter: 'http://togetter.com/li/718192',
+  user_num: 1001}
