@@ -8,10 +8,10 @@
 <link type="text/css" rel="stylesheet" href="http://platform.twitter.com/embed/timeline.6a72a50e1a93dc4d97ff897124263ab7.default.css"></link>
 <link type="text/css" rel="stylesheet" href="/css/1draw-collections-default.css">
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
-<script type="text/javascript" src="date.js"></script>
-<script type="text/javascript" src="../css-changer.js"></script>
-<script type="text/javascript" src="http://www.google.com/jsapi"></script>
-<script type="text/javascript" src="/js/counter.js"></script>
+<script src="date.js"></script>
+<script src="http://www.google.com/jsapi"></script>
+<script src="/js/counter.js"></script>
+<script src="../css-changer.js"></script>
 <script src="/js/lang-switch.js"></script>
 <script src="/js/google-analytics.js"></script>
 </head>
@@ -22,9 +22,21 @@
 <h2 class="ja">{h2}</h2>
 <h2 class="en">{h2_en}</h2>
 
-<div class="btn-group list-thumbnail" style="">
-  <button id="list" class="btn btn-default active">リスト表示</button>
-  <button id="thumbnail" class="btn btn-default">サムネイル表示</button>
+<!-- tweet button -->
+<p>
+  <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://sakuramochi.mydns.jp/precure/1draw-collections/date/{date}" data-size="large" data-hashtags="precure">Tweet</a>
+  <script>!function(d,s,id){{var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){{js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}}}(document, 'script', 'twitter-wjs');</script>
+</p>
+
+<div class="btn-group list-thumbnail">
+  <button id="list" class="btn btn-default active">
+    <span class="ja">リスト</span>
+    <span class="en">List</span>
+  </button>
+  <button id="thumbnail" class="btn btn-default">
+    <span class="ja">サムネイル</span>
+    <span class="en">Thumbnail</span>
+  </button>
 </div>
 
 </div>
@@ -33,14 +45,6 @@
 </div>
 
 <div id="footer">
-<p style="margin-bottom: 6em;">
-  <a href="https://twitter.com/intent/tweet?original_referer=&text={date_str} - {theme_tweet} / プリキュア版深夜の真剣お絵描き60分一本勝負 まとめのページ&tw_p=tweetbutton&url=http://sakuramochi.mydns.jp/precure/1draw-collections/date/{date}.html">
-    <button class="btn tweet-btn">
-      <i class="fa fa-twitter" style="color: #62aedc;"></i> このページをツイートする
-    </button>
-  </a>
-</p>
-
 <p>最終更新日時: {last_update}</p>
 <p><a href="admin-{date}.html">管理者のページ</a></p>
 </div>

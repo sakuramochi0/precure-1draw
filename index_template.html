@@ -1,111 +1,106 @@
 <!doctype html>
 <html lang="ja">
-<head>
-<meta charset="utf-8"/>
-<title>#プリキュア版深夜の真剣お絵描き60分1本勝負 まとめのページ</title>
-<link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
-<link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
-<link type="text/css" rel="stylesheet" href="/css/1draw-collections-default.css">
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
-<script src="css-changer.js"></script>
-<script src="/js/lang-switch.js"></script>
-<script src="/js/google-analytics.js"></script>
-</head>
-<body>
-<div id="header">
-<h1>#プリキュア版深夜の真剣お絵描き60分一本勝負</h1>
-<h2 class="ja">イラストのまとめのページ</h2>
-<h2 class="en">Precure 1 Hour Drawing Challenge Illust Collections</h2>
-<img id="ribbon" src="img/ribbon-{ribbon_name}.png">
-</div>
-
-<!-- info table -->
-<div class="panel panel-danger">
-    <div class="panel-heading"><i class="fa fa-info-circle"></i> 
-      <span class="ja">お知らせ</span>
-      <span class="en">Information</span>
+  <head>
+    <meta charset="utf-8"/>
+    <title>#プリキュア版深夜の真剣お絵描き60分1本勝負 まとめのページ</title>
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
+    <link type="text/css" rel="stylesheet" href="/css/1draw-collections-default.css">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script src="css-changer.js"></script>
+    <script src="/js/lang-switch.js"></script>
+    <script src="/js/google-analytics.js"></script>
+  </head>
+  <body>
+    <div id="header">
+      <h1>#プリキュア版深夜の真剣お絵描き60分一本勝負</h1>
+      <h2 class="ja">イラストのまとめのページ</h2>
+      <h2 class="en">Precure 1 Hour Drawing Challenge Illust Collections</h2>
+      <img id="ribbon" src="img/ribbon-{ribbon_name}.png">
     </div>
-    <table class="table">
-      <tbody>
-	{info_table}
-    </tbody></table>
-  </div>
-  
-<!-- main contents -->
-<div id="content">
-  <div class="btn-group" style="float: right;">
-    <button id="ja" class="btn btn-default active" type="button">ja</button>
-    <button id="en" class="btn btn-default" type="button">en</button>
-  </div>
 
-  <!-- toc -->
-  <ul>
-    <li>
-      <a href="about.html">
-	<span class="ja">このサイトについて</span>
-	<span class="en">About this site</span>
-      </a>
-    </li>
-    <li>
-      <a href="user">
-	<span class="ja">参加者の一覧ページ</span>
-	<span class="en">List of participants</span>
-      </a>
-    </li>
-    <li>
-      <a href="theme">
-	<span class="ja">テーマの一覧ページ</span>
-	<span class="en">List of themes</span>
-      </a>
-    </li>
-  </ul>
-  <p style="margin: 6px; text-decoration: underline;">
-  </p>
+    <!-- tweet button -->
+    <p style="text-align: center;">
+      <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://sakuramochi.mydns.jp/precure/1draw-collections" data-size="large" data-hashtags="precure">Tweet</a>
+      <script>!function(d,s,id){{var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){{js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}}}(document, 'script', 'twitter-wjs');</script>
+    </p>
 
-  <h3 class="ja">テーマ一覧</h3>
-  <h3 class="en">Themes</h3>
-  <table class="themes">
-    <tr class="header odd ja">
-      <td class="num"><b>回数</b></td>
-      <td class="date"><b>日付</b></td>
-      <td class="theme"><b>テーマ</b></td>
-      <td class="work_num"><b>作品数</b></td>
-      <td class="togetter"><b>Togetter</b></td>
-    </tr>
-    <tr class="header odd en">
-      <td class="num"><b>#</b></td>
-      <td class="date"><b>Date</b></td>
-      <td class="theme"><b>Theme</b></td>
-      <td class="work_num"><b>Work#</b></td>
-      <td class="togetter"><b>Togetter</b></td>
-    </tr>
-    {list}
-  </table>
+    <!-- info table -->
+    <div class="panel panel-danger">
+      <div class="panel-heading"><i class="fa fa-info-circle"></i> 
+	<span class="ja">お知らせ</span>
+	<span class="en">Information</span>
+      </div>
+      <table class="table">
+	<tbody>
+	  {info_table}
+      </tbody></table>
+    </div>
+    
+    <!-- main contents -->
+    <div id="content">
+      <div class="btn-group" style="float: right;">
+	<button id="ja" class="btn btn-default active" type="button">ja</button>
+	<button id="en" class="btn btn-default" type="button">en</button>
+      </div>
 
-  <!-- chart -->
-  <h3 class="ja">参加者と作品数のグラフ</h3>
-  <h3 class="en">Chart of participants and works number</h3>
-  <img class="ja" src="chart.svg">
-  <img class="en" src="chart-en.svg">
+      <!-- toc -->
+      <ul>
+	<li>
+	  <a href="about.html">
+	    <span class="ja">このサイトについて</span>
+	    <span class="en">About this site</span>
+	  </a>
+	</li>
+	<li>
+	  <a href="user">
+	    <span class="ja">参加者の一覧ページ</span>
+	    <span class="en">List of participants</span>
+	  </a>
+	</li>
+	<li>
+	  <a href="theme">
+	    <span class="ja">テーマの一覧ページ</span>
+	    <span class="en">List of themes</span>
+	  </a>
+	</li>
+      </ul>
+      <p style="margin: 6px; text-decoration: underline;">
+      </p>
 
-</div>
-<div id="footer">
-<p style="margin-bottom: 6em;">
-  <a href="https://twitter.com/intent/tweet?original_referer=&text=%23プリキュア版深夜の真剣お絵描き60分一本勝負 まとめのページ&tw_p=tweetbutton&url=http://sakuramochi.mydns.jp/precure/1draw-collections">
-    <button class="btn tweet-btn ja" style="width: 20em;">
-      <i class="fa fa-twitter" style="color: #62aedc;"></i> このページをツイートする
-    </button>
-  </a>
-  <a href="https://twitter.com/intent/tweet?original_referer=&text=%23プリキュア版深夜の真剣お絵描き60分一本勝負 Precure 1 Hour Drawing Challenge Illust Collections&tw_p=tweetbutton&url=http://sakuramochi.mydns.jp/precure/1draw-collections">
-    <button class="btn tweet-btn en" style="width: 20em;">
-      <i class="fa fa-twitter" style="color: #62aedc;"></i> Tweet this page
-    </button>
-  </a>
-</p>
-<p class="ja">最終更新日時: {last_update}</p>
-<p class="en">Last Updated at {last_update_en}</p>
-<p class="ja"><a href="admin-index.html">管理者のページ</a></p>
-<p class="en"><a href="admin-index.html">Admin page</a></p>
-</div>
-</body>
+      
+      <h3 class="ja">テーマ一覧</h3>
+      <h3 class="en">Themes</h3>
+      <table class="themes">
+	<tr class="header odd ja">
+	  <td class="num"><b>回数</b></td>
+	  <td class="date"><b>日付</b></td>
+	  <td class="theme"><b>テーマ</b></td>
+	  <td class="work_num"><b>作品数</b></td>
+	  <td class="togetter"><b>Togetter</b></td>
+	</tr>
+	<tr class="header odd en">
+	  <td class="num"><b>#</b></td>
+	  <td class="date"><b>Date</b></td>
+	  <td class="theme"><b>Theme</b></td>
+	  <td class="work_num"><b>Work#</b></td>
+	  <td class="togetter"><b>Togetter</b></td>
+	</tr>
+	{list}
+      </table>
+
+      <!-- chart -->
+      <h3 class="ja">参加者と作品数のグラフ</h3>
+      <h3 class="en">Chart of participants and works number</h3>
+      <img class="ja" src="chart.svg">
+      <img class="en" src="chart-en.svg">
+
+    </div>
+    <div id="footer">
+      <p class="ja">最終更新日時: {last_update}</p>
+      <p class="en">Last Updated at {last_update_en}</p>
+      <p class="ja"><a href="admin-index.html">管理者のページ</a></p>
+      <p class="en"><a href="admin-index.html">Admin page</a></p>
+    </div>
+  </body>
 </html>
