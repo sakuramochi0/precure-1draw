@@ -227,11 +227,12 @@ def tweet_filter(tweet, new=False):
 
     # if ignore_user
     hit = ''
-    if (tweet['tweet']['user']['screen_name'] in ignores['ignore_user']) or (tweet['tweet']['user']['id'] in ignores['ignore_user']):
-        hit = 'Hit ignore_user:'
-        return False
+    for user in ignores['ignore_user']:
+        if re.search(str(user), str(tweet['tweet']['user']['screen_name'])) or re.search(str(user), str(tweet['tweet']['user']['id'])):
+                                                                              hit = 'Hit ignore_user "{}":'.format(user)
+                                                                              return False
     # if ignore_id tweet
-    elif tweet['tweet']['id'] in ignores['ignore_id']:
+    if tweet['tweet']['id'] in ignores['ignore_id']:
         hit = 'Hit ignore_id:'
     # if ignore_url
     elif tweet['tweet']['entities']['urls'] and any([ignore_url in url['expanded_url']
@@ -362,9 +363,9 @@ def store_image(id):
 def make_symlinks_to_img_dir():
     tweets = get_tweets()
     for tweet in tweets:
-        src_dir = img_dir + '-' + tweet['tweet']['user']['id_str']
+        src_dir = img_dir + tweet['tweet']['user']['id_str']
         dst_dir = img_dir + '-' + tweet['tweet']['user']['screen_name']
-        if not path.islink(dst_dir):
+        if not path.islink(dst_dir) and path.isdir(src_dir):
             os.symlink(os.getcwd() + '/' + src_dir, os.getcwd() + '/' + dst_dir)
 
 # database
@@ -544,6 +545,8 @@ def update_themes():
                     themes[date]['theme_en'] = ''
                     themes[date]['num'] = 0
                     t.retweet(id=tweet['id'])
+            else:
+                break
         for date in themes:
             togetter_url = [tweet['tweet']['entities']['urls'][0]['expanded_url']
                             for tweet in tweets
