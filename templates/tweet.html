@@ -1,0 +1,77 @@
+<div class="twitter-tweet twitter-tweet-rendered" allowtransparency="true" scrolling="no" frameborder="0" height="700">
+
+<div class="media-forward root standalone-tweet 左横書き twitter-tweet not-touch" data-dt-full="%{{year}}年%{{month}}%{{day}}日 %{{hours12}}:%{{minutes}} %{{amPm}}" data-dt-am="AM" data-dt-pm="PM" data-scribe="page:tweet" lang="ja">
+  <blockquote class="tweet subject expanded h-entry" data-tweet-id="{id}" cite="https://twitter.com/{screen_name}/status/{id}" data-scribe="section:subject">
+    
+  <div class="cards-base cards-multimedia customisable-border" data-scribe="component:card">
+
+    <!-- labels -->
+    {labels}
+    
+  <div class="media">
+    <a class="photo-link  box-0" target="_blank" href="https://twitter.com/{screen_name}/statuses/{id}">
+
+  <!-- illust -->
+  {imgs}
+
+    </a>
+  </div>
+</div>
+
+    <div class="header">
+      <div class="h-card p-author" data-scribe="component:author">
+  <a class="u-url profile" href="https://twitter.com/{screen_name}" aria-label="{name} (ユーザー名: {screen_name})" data-scribe="element:user_link">
+    <img class="u-photo avatar" alt="" src="{icon_src_bigger}" data-scribe="element:avatar">
+    <span class="full-name">
+      
+      <span class="p-name customisable-highlight" data-scribe="element:name">{name}</span>
+    </span>
+    <span class="p-nickname" dir="ltr" data-scribe="element:screen_name">@{screen_name}</span>
+
+  </a>
+</div>
+
+    </div>
+    <div class="content e-entry-content" data-scribe="component:tweet">
+      <p class="e-entry-title">{text}</p>
+      <div class="dateline collapsible-container">
+        
+<a class="u-url customisable-highlight long-permalink" href="https://twitter.com/{screen_name}/statuses/{id}" data-datetime="{time_iso}" data-scribe="element:full_timestamp"><time pubdate="" class="dt-updated" datetime="{time_iso}" title="投稿時刻: {time_utc}">{time_jtc}</time></a>
+        
+      </div>
+    </div>
+    <div class="footer customisable-border" data-scribe="component:footer">
+        <span class="stats-narrow customisable-border"><span class="stats" data-scribe="component:stats">
+
+
+  <a href="https://twitter.com/{screen_name}/statuses/{id}" title="View Tweet on Twitter" data-scribe="element:retweet_count">
+    <span class="stats-retweets">
+      <strong>{retweet_count}</strong> Retweets
+    </span>
+  </a>
+  <a href="https://twitter.com/{screen_name}/statuses/{id}" title="View Tweet on Twitter" data-scribe="element:favorite_count">
+    <span class="stats-favorites">
+      <strong>{favorite_count}</strong> Favorites
+    </span>
+  </a>
+</span>
+</span>
+<ul class="tweet-actions" role="menu" aria-label="Tweet actions">
+  {tweet_admin}
+  <li><a href="../user/{screen_name}.html" title="このユーザーのギャラリーを見る">
+      <i class="ic fa fa-picture-o fa-lg"></i><b>このユーザーのギャラリーを見る</b></a></li>
+  <li><a href="report.html?id={id}" title="このツイートについて報告する">
+      <i class="ic fa fa-flag fa-lg"></i><b>このツイートについて報告</b></a></li>
+  <li><a href="https://twitter.com/intent/tweet?in_reply_to={id}" class="reply-action web-intent" title="リプライする">
+      <i class="ic fa fa-reply fa-lg"></i><b>リプライ</b></a></li>
+  <li><a href="https://twitter.com/intent/retweet?tweet_id={id}" class="retweet-action web-intent" title="リツイートする">
+      <i class="ic fa fa-retweet fa-lg"></i><b>リツイート</b></a></li>
+  <li><a href="https://twitter.com/intent/favorite?tweet_id={id}" class="favorite-action web-intent" title="お気に入りに追加">
+      <i class="ic fa fa-star fa-lg"></i><b>お気に入り</b></a></li>
+  
+</ul>
+    </div>
+  </blockquote>
+</div>
+
+</div>
