@@ -1,0 +1,29 @@
+- show: True
+  date: 2014/10/21
+  ja: 「参加者の一覧（参加回数順）」と「テーマの一覧（作品・カテゴリー別）」のページを更新しました。
+  en: Updated Participants list (ordered by the number of participation) and Themes (categorized by series and themes) pages.
+- show: False
+  date: 2014/10/21
+  ja: 「日ごとのイラスト一覧ページ」と「ユーザーのギャラリーページ」にスライドショーの機能を追加しました。
+  en: Add a function to show illusts as a slideshow in daily theme pages and user gallery pages.
+- show: False
+  date: 2014/10/21
+  ja: スマートフォン向けにページのデザインを改善しました。
+  en: Improving the page design for the smartphone.
+- show: False
+  date: 2014/09/11
+  ja: 表示されなくなっていた参加者一覧とテーマ一覧のページヘのリンクを直しました。最新のデータへの更新までは少しお待ち下さい。ご不便をお掛けしてすみません。
+  en: Fix a bug that two links to List of participants and List of themes. I am sorry for the inconvenience.
+- show: False
+  date: 2014/07/24
+  ja: テーマを英語でも表示できるようにしました。
+  en: Translate themes into English.
+- show: False
+  date: 2014/07/03
+  ja: それぞれのツイートの右下にあるギャラリーアイコン <i class="fa fa-picture-o"></i> を選択すると、ユーザーごとにイラストをまとめたギャラリーのページを見ることができます。
+  en: 'By selecting this icon <i class="fa fa-picture-o fa"></i> , which is at the right-bottom
+    corner of each tweet, you can see the user specific gallery page.'
+- show: False
+  date: 2014/07/03
+  ja: 一部、英語表示に切り替えられるようにしました。
+  en: Partly support English.

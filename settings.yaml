@@ -1,0 +1,36 @@
+precure:
+  # secret
+  credentials: 'precure/.credentials'
+  # directory
+  html_dir: 'precure/html/mongo/'
+  img_dir: 'precure/img/'
+  # setting files
+  themes: 'precure/themes.yaml'
+  ignores: 'precure/ignores.yaml'
+  info: 'precure/info.yaml'
+  rank_users: 'precure/rank_users.yaml'
+  # inside files
+  update_date_que: 'precure/update_date_que.yaml'
+  admin_actions: 'precure/html/mongo/date/admin_actions.yaml'
+  admin_actions_history_html: 'precure/templates/admin_actions_history.html'
+  # constants
+  hash_tags: ['プリキュア版深夜の真剣お絵描き60分一本勝負', 'プリキュア版深夜の真剣お絵描き60秒一本勝負']
+  triger: 'http'
+pripara:
+  # secret
+  credentials: 'precure/.credentials'
+  # directory
+  html_dir: 'precure/html/mongo/'
+  img_dir: 'precure/img/'
+  # setting files
+  themes: 'precure/themes.yaml'
+  ignores: 'precure/ignores.yaml'
+  info: 'precure/info.yaml'
+  rank_users: 'precure/rank_users.yaml'
+  # inside files
+  update_date_que: 'precure/update_date_que.yaml'
+  admin_actions: 'precure/html/mongo/date/admin_actions.yaml'
+  admin_actions_history_html: 'precure/templates/admin_actions_history.html'
+  # constants
+  hash_tags: ['prpr版深夜の真剣お絵描き60分一本勝負']
+  triger: 'http'
