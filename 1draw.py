@@ -660,8 +660,13 @@ def update_themes():
             match = re.findall('(?:“|”|\'|")(.+?)(?:“|”|\'|")', tweet['text'])
             if match:
                 theme = {}
-                theme['theme'] = ' / '.join(match)
-                theme['theme_en'] = ''
+                theme_name = ' / '.join(match)
+                theme['theme'] = theme_name
+                same_theme = themes.find_one({'theme': theme_name})
+                if same_theme:
+                    theme['theme_en'] = same_theme['theme_en']
+                else:
+                    theme['theme_en'] = ''
                 theme['category'] = ['uncategorized']
                 themes.update({'date': date}, {'$set': theme}, True)
                 t.retweet(id=tweet['id']) # retweet a official theme tweet
