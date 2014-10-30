@@ -237,7 +237,6 @@ def tweet_filter(tweet, new=False):
     for user in ignores['ignore_user']:
         if re.search(str(user), str(tweet['tweet']['user']['screen_name'])) or re.search(str(user), str(tweet['tweet']['user']['id'])):
             hit = 'Hit ignore_user "{}":'.format(user)
-            return False
     # if ignore_id tweet
     if tweet['tweet']['id'] in ignores['ignore_id']:
         hit = 'Hit ignore_id:'
@@ -268,6 +267,8 @@ def tweet_filter(tweet, new=False):
             if re.search(word, tweet['tweet']['text']): 
                 hit += 'Hit ignore_word "{}":'.format(word)
     if hit:
+        print('-' * 16)
+        print(hit)
         return False
     else:
         return True
@@ -483,6 +484,7 @@ def print_tweet(id=0, tweet=None):
     if id:
         tweet = tweets.find_one({'meta.id': id})
     print('https://twitter.com/{}/status/{}'.format(tweet['tweet']['user']['screen_name'], tweet['meta']['id']))
+    pprint(tweet)
 
 def print_all_tweets():
     ts = get_tweets()
@@ -517,19 +519,20 @@ def update_date(daily=False, date=''):
         with open(setting['update_date_que'], 'w') as f:
             yaml.dump(deque([]), f)
 
-    # load que file
-    with open(setting['update_date_que']) as f:
-        ques = yaml.load(f)
-
     # add daily tweets to the left of ques
     if daily:
+        ques = deque([])
         for i in tweets.find({'meta.date': get_date(), 'meta.removed': False, 'meta.deny_collection': False}).sort([('meta.id', -1)]):
             ques.appendleft(i['meta']['id'])
-        
     # add the date tweets to the left of ques
-    if date:
+    elif date:
+        ques = deque([])
         for i in tweets.find({'meta.date': date, 'meta.removed': False, 'meta.deny_collection': False}).sort([('meta.id', -1)]):
             ques.appendleft(i['meta']['id'])
+    # load que file
+    else:
+        with open(setting['update_date_que']) as f:
+            ques = yaml.load(f)
         
     # load tweets if there is no que
     if not ques:
@@ -542,7 +545,7 @@ def update_date(daily=False, date=''):
     print('api remaining:', api_remaining[0])
     print('api reset time:', api_remaining[1])
     if fetch_count:
-        for i in range(fetch_count):
+        for i in range(min(fetch_count, len(ques))):
             id = ques.popleft()
             tweet = tweets.find_one({'meta.id': id})
             retweet_and_record(id=id, retweet=False)
@@ -635,10 +638,8 @@ def read_themes_yaml():
         fcntl.flock(f, fcntl.LOCK_SH)
         themes_yaml = yaml.load(f)
     for theme in themes_yaml:
-        print(theme)
-        themes.update({'date': theme['date']}, {'$set': theme}, True)
-    for theme in themes.find():
-        print(theme)
+        themes.update({'date': theme['date']}, {'$set': {'theme_en': theme['theme_en']}}, True)
+        themes.update({'date': theme['date']}, {'$set': {'category': theme['category']}}, True)
 
 def write_themes_yaml():
     with open(setting['themes'], 'w') as f:
@@ -663,7 +664,7 @@ def update_themes():
                 theme['theme_en'] = ''
                 theme['category'] = ['uncategorized']
                 themes.update({'date': date}, {'$set': theme}, True)
-                #t.retweet(id=tweet['id']) # retweet a official theme tweet
+                t.retweet(id=tweet['id']) # retweet a official theme tweet
         else:
             break
 
@@ -844,22 +845,20 @@ def chart():
     ax2.set_ylabel('作品数', fontproperties=fp)
      
     # legend
-    p1 = plt.Rectangle((0, 0), 1, 1, fc="lightsteelblue")
-    p2 = plt.Rectangle((0, 0), 1, 1, fc="palevioletred")
-    ax1.legend([p1, p2], ['累計参加者数', '作品数'], loc='upper left', prop=fp)
+    p1 = plt.Rectangle((0, 0), 1, 1, fc="lightsteelblue", ec='lightsteelblue')
+    p2 = plt.Rectangle((0, 0), 1, 1, fc="palevioletred", ec='palevioletred')
+    ax1.legend([p1, p2], ['累計参加者数', '作品数'], loc='upper left', prop=fp, )
 
      
     #plt.title('作品数の変化', fontproperties=fp)
-    plt.savefig(setting['html_dir'] + 'chart.svg')
-    plt.savefig('static/chart.svg')
+    plt.savefig(setting['static_dir'] + 'chart.svg')
 
     # en
     ax1.set_xlabel('#', fontproperties=fp)
     ax1.set_ylabel('Total perticipants')
     ax2.set_ylabel('Works')
     ax1.legend([p1, p2], ['Total perticipants', 'Works'], loc='upper left')
-    plt.savefig(setting['html_dir'] + 'chart-en.svg')
-    plt.savefig('static/chart-en.svg')
+    plt.savefig(setting['static_dir'] + 'chart-en.svg')
 
 def fav_plus_rt(tweet):
     fav = tweet['tweet']['favorite_count']
