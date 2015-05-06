@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# precure-1draw.py
+# 1draw.py
 #   - Retweet all the tweets with the hashtag and image(including 'http')
 #   - Store tweets data
 #   - Generate html gallery which show tweets with images
@@ -65,8 +65,8 @@ class MyStreamer(TwythonStreamer):
 
 # load
 def auto_retweet_stream():
-    '''Retweet all the tweet which have the hash_tag by stream.'''
-    stream.statuses.filter(track='#' + setting['hash_tags'][0] + ' ' + setting['triger'])
+    '''Retweet all the tweet which have the hash_tag and images by using stream API'''
+    stream.statuses.filter(track='#' + setting['hash_tag'] + ' http')
 
 def auto_retweet_rest(past=3, retweet=True):
     '''Retweet all the tweet which have the hash_tag by rest.'''
@@ -75,16 +75,17 @@ def auto_retweet_rest(past=3, retweet=True):
     tweets = []
     for i in range(past):
         try:
-            res = t.search(q='#' + setting['hash_tags'][0] + ' -RT', count=100, result_type='recent', max_id=max_id)
+            res = t.search(q='#' + setting['hash_tag'] + ' -RT', count=100, result_type='recent', max_id=max_id)
         except TwythonError as e:
             print('Error occered:', e)
             continue
         res = res['statuses']
-        max_id = res[-1]['id_str']
-        for tweet in res:
-            tweets.append(tweet)
+        if res:
+            max_id = res[-1]['id_str']
+            for tweet in res:
+                tweets.append(tweet)
         time.sleep(10)
-
+    
     # record
     for tweet in reversed(tweets):
         if not has_id(tweet['id']):
@@ -105,22 +106,28 @@ def retweet_and_record(tweet=False, id=False, retweet=True, fetch=True, exceptio
         if fetch:
             try:
                 tweet = t.show_status(id=id)
+                if has_id(id):
+                    set_value(id, 'meta.removed', False)
+                
             except TwythonError as e:
                 print('-' * 16)
-                if e.error_code == 404:
+                if e.error_code == 404:   # tweet was deleted
                     if has_id(id):
                         set_value(id, 'meta.removed', 'deleted')
                         print('404 Not found and marked "deleted":', id)
                         print_tweet(id)
+                        return None
                     else:
                         print('404 Not found and not in database:', id)
-                elif e.error_code == 403:
+                elif e.error_code == 403:   # accound has been locked
                     if has_id(id):
                         set_value(id, 'meta.removed','locked')
                         print('403 Tweet has been locked and marked "locked":', id)
                         print_tweet(id)
+                        return None
                     else:
                         print('403 Tweet has been locked and not in database:', id)
+                        return None
                 elif e.error_code == 429: # API remaining = 0
                     print('api not remaining')
                     return get_tweets('meta.id', id)[0]
@@ -129,6 +136,7 @@ def retweet_and_record(tweet=False, id=False, retweet=True, fetch=True, exceptio
                     print(e)
                     if tweet:
                         pprint(tweet)
+                    return None
     else:
         id = tweet['id']
 
@@ -136,8 +144,6 @@ def retweet_and_record(tweet=False, id=False, retweet=True, fetch=True, exceptio
         new = True
         if tweet:
             tweet = {'tweet': tweet}
-        else:
-            return None
     else:
         new = False
         if tweet:
@@ -158,8 +164,6 @@ def retweet_and_record(tweet=False, id=False, retweet=True, fetch=True, exceptio
         # get date
         if not 'date' in tweet['meta']:
             tweet['meta']['date'] = get_date(tweet['tweet']['created_at'])
-        else:
-            date = tweet['meta']['date']
 
         # exclude a tweet of deny_retweet and set it
         if not 'retweeted' in tweet['meta']:
@@ -173,6 +177,7 @@ def retweet_and_record(tweet=False, id=False, retweet=True, fetch=True, exceptio
                     res = t.retweet(id=tweet['meta']['id'])
                     if res['retweeted']:
                         tweet['meta']['retweeted'] = True
+                # if double retweeted
                 except TwythonError as e:
                     if e.error_code == 403:
                         print('Double retweet:', tweet['tweet']['id'])
@@ -204,26 +209,29 @@ def retweet_and_record(tweet=False, id=False, retweet=True, fetch=True, exceptio
         # add labels
         update_labels(tweet['meta']['id'])
 
-        return tweet
-        
+    return tweet
+
 def including_hash_tag(tweet):
     # 1. if any similar hash_tags in tweet['entities']['hashtags']
     if 'hashtags' in tweet['tweet']['entities']: # tweet has hashtags data
         tweet_tags = tweet['tweet']['entities']['hashtags']
         for tweet_tag in tweet_tags:
-            if difflib.get_close_matches(tweet_tag['text'], setting['hash_tags']):
+            if difflib.get_close_matches(tweet_tag['text'], [setting['hash_tag']]):
+                print("including hash_tag in tweet['entities']['hashtags']")
                 return True
     # 2. or if any similar hash_tags in tweet['text']
-    for match in re.finditer('プリキュア', tweet['tweet']['text']):
-        tweet_tag = tweet['tweet']['text'][match.start():match.start()+22]
-        if difflib.get_close_matches(tweet_tag, setting['hash_tags']):
+    for match in re.finditer('深夜の', tweet['tweet']['text']):
+        tweet_tag = tweet['tweet']['text'][match.start()-6:match.start()+16]
+        if difflib.get_close_matches(tweet_tag, [setting['hash_tag']]):
+            print("including hash_tag in tweet['text']")
             return True
-
     # otherwise, not including any hash_tag
+    print('no including hash_tag')
     return False
 
 def tweet_filter(tweet, new=False):
     '''Filter a spam tweet. If the tweet is spam, return False, otherwise return True.'''
+
     with open(setting['ignores']) as f:
         ignores = yaml.load(f)
 
@@ -232,11 +240,7 @@ def tweet_filter(tweet, new=False):
         if tweet['meta']['exception']:
             return True
 
-    # if ignore_user
     hit = ''
-    for user in ignores['ignore_user']:
-        if re.search(str(user), str(tweet['tweet']['user']['screen_name'])) or re.search(str(user), str(tweet['tweet']['user']['id'])):
-            hit = 'Hit ignore_user "{}":'.format(user)
     # if ignore_id tweet
     if tweet['tweet']['id'] in ignores['ignore_id']:
         hit = 'Hit ignore_id:'
@@ -255,12 +259,17 @@ def tweet_filter(tweet, new=False):
     # if including hash_tag which similar to any of the hash_tags
     elif not including_hash_tag(tweet):
         hit = 'Not including any hash_tag:'
-    # if including trigger
-    elif setting['triger'] not in tweet['tweet']['text']:
-        hit = 'Not including triger:'
+    # if including image
+    elif 'http' not in tweet['tweet']['text']:
+        hit = 'Not including http:'
     # if deleted
     elif not new and tweet['meta']['removed'] == 'deleted':
         hit = 'Already deleted:'
+    # if ignore_user
+    elif 'user' in tweet['tweet']:
+        for user in ignores['ignore_user']:
+            if re.search(str(user), tweet['tweet']['user']['screen_name']) or re.search(str(user), tweet['tweet']['user']['id_str']):
+                hit = 'Hit ignore_user "{}":'.format(user)
     else:
         # if including ignore_word
         for word in ignores['ignore_word']:
@@ -366,6 +375,10 @@ def store_image(id):
     # set imgs after save all the imgs loop
     set_value(id, 'meta.imgs', imgs)
 
+def store_image_user(screen_name):
+    for tw in tweets.find({'tweet.user.screen_name': screen_name}):
+        store_image(tw['meta']['id'])
+    
 def store_image_all():
     with open('store_image.log') as f:
         ids = f.read().split()
@@ -424,66 +437,10 @@ def get_tweets(key=None, value=None, sort=None):
     else:
         raise Error('Error: Give get_tweets key-value pair')
 
-def copy_database_tweets(date=''):
-    # copy database
-    con = sqlite3.connect('tweets.sqlite', detect_types=sqlite3.PARSE_DECLTYPES)
-    con.row_factory = sqlite3.Row
-    sqlite3.register_adapter(dict, lambda x: json.dumps(x, ensure_ascii=False))
-    sqlite3.register_converter('dict', lambda x: json.loads(x.decode('utf-8')))
-    sqlite3.register_adapter(list, lambda x: json.dumps(x, ensure_ascii=False))
-    sqlite3.register_converter('list', lambda x: json.loads(x.decode('utf-8')))
-
-    if date:
-        query = "select * from tweets where date='{}' order by id".format(date)
-    else:
-        query = 'select * from tweets order by id'
-    for i in con.execute(query):
-        if i['removed'] == '0':
-            removed = False
-        else:
-            removed = True
-        t = {'meta': {'id': i['id'],
-                      'date': i['date'],
-                      'imgs': i['imgs'],
-                      'labels': i['labels'],
-                      'removed': removed,
-                      'retweeted': bool(i['retweeted']),
-                      'deny_retweet': bool(i['deny_retweet']),
-                      'deny_collection': bool(i['deny_collection']),
-                      'exception': bool(i['exception'])
-                      },
-             'tweet': i['tweet']
-             }
-        tweets.update({'meta.id': i['id']}, {'$set': t}, True)
-    print('Copy {} tweets'.format(tweets.count()))
-
-def copy_database_themes():
-    # copy themes
-    with open(setting['themes']) as f:
-        fcntl.flock(f, fcntl.LOCK_SH)
-        ts = yaml.load(f)
-
-    for num, (date, theme) in enumerate(sorted(ts.items())):
-        t = {}
-        t['date'] = date
-        for k, v in theme.items():
-            if v: # only make key non-empty value
-                if k == 'num':
-                    k = 'work_num'
-                    t['num'] = num
-                t[k] = v
-        print(t)
-        themes.update({'date': date}, {'$set': t}, True)
-    print('Copy {} themes'.format(themes.count()))
-
-def copy_database():
-    copy_database_tweets()
-    copy_database_themes()
-
 def print_tweet(id=0, tweet=None):
     if id:
         tweet = tweets.find_one({'meta.id': id})
-    print('https://twitter.com/{}/status/{}'.format(tweet['tweet']['user']['screen_name'], tweet['meta']['id']))
+    print('https://twitter.com/{}/status/{}'.format(tweet['tweet']['user']['screen_name'], tweet['tweet']['id']))
     pprint(tweet)
 
 def print_all_tweets():
@@ -562,6 +519,8 @@ def print_date_duplicates(date=''):
     '''
     if not date:
         date = get_date()
+    else:
+        date = get_date(date)
 
     # for date tweets
     for id in tweets.find({'meta.date': date, 'meta.removed': False, 'meta.deny_collection': False}).distinct('tweet.user.id'):
@@ -592,7 +551,7 @@ def print_tweet_summary(i, tweet):
     print('{} (@{}) [{}/{}]'.format(tweet['tweet']['user']['name'], tweet['tweet']['user']['screen_name'], tweet['tweet']['favorite_count'], tweet['tweet']['retweet_count']))
     print(tweet['tweet']['text'])        
             
-# api
+# api remainings
 def get_search_remaining():
     api = t.get_application_rate_limit_status()['resources']['search']['/search/tweets']
     api_remaining = api['remaining']
@@ -612,34 +571,59 @@ def sleep_until_api_reset():
         now = datetime.datetime.now()
         time.sleep((reset - now).seconds + 10)
 
-# generate html
-def get_date(time=''):
-    '''
-    Return a date as begins with 22:50.
-    i.e. 2014-07-07 12:00 -> 2014-07-06
-         2014-07-07 22:50 -> 2014-07-07
+def get_date(time=None):
 
-    Why 22:50?
-      Because the theme is presented on 22:55,
-      so if the threshold were 23:00,
-      the theme is granted as the before day's.
-    '''
-    if not time:
-        time = str(datetime.datetime.now().replace(tzinfo=pytz.timezone('Asia/Tokyo')))
-    time = parse(time).astimezone(pytz.timezone('Asia/Tokyo'))
-    if time.hour <= 21 or (time.hour <= 22 and time.minute < 50):
-        time = time.date() - datetime.timedelta(1)
+    if genre == 'pripara_prpr':
+        return get_date_pripara_prpr(time)
     else:
-        time = time.date()
-    return str(time)
+        if time:
+            time = parse(time).astimezone(pytz.timezone('Asia/Tokyo'))
+        else:
+            time = datetime.datetime.now().replace(tzinfo=pytz.timezone('Asia/Tokyo'))
+
+        threshold_time = (parse(setting['start_time']) - datetime.timedelta(minutes=30)).time()
+        if time.time() < threshold_time:
+            return time.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None) - datetime.timedelta(days=1)
+        else:
+            return time.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
+
+def get_date_pripara_prpr(time):
+    time = parse(time).astimezone(pytz.timezone('Asia/Tokyo'))
+
+    # first threshold - on wednesday
+    if parse('wed').weekday() == time.weekday():
+        if time.time() < parse('21:00').time():
+            delta = 4
+        else:
+            delta = 0
+
+    # second threshold - on saturday
+    if parse('sat').weekday() == time.weekday():
+        if time.time() < parse('21:00').time():
+            delta = 3
+        else:
+            delta = 0
+
+    # first span - from thu to fri
+    if parse('wed').weekday() < time.weekday() < parse('sat').weekday():
+        delta = time.weekday() - parse('wed').weekday()
+
+    # second span - from sun to tue
+    if parse('sat').weekday() < time.weekday():
+        delta = time.weekday() - parse('sat').weekday()
+    elif time.weekday() < parse('wed').weekday():
+        delta = time.weekday() + 2
+
+    date = time.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
+    day = date - datetime.timedelta(days=delta)
+    return day
 
 def read_themes_yaml():
     with open(setting['themes']) as f:
         fcntl.flock(f, fcntl.LOCK_SH)
         themes_yaml = yaml.load(f)
     for theme in themes_yaml:
-        themes.update({'date': theme['date']}, {'$set': {'theme_en': theme['theme_en']}}, True)
-        themes.update({'date': theme['date']}, {'$set': {'category': theme['category']}}, True)
+        themes.update({'date': theme['date']}, {'$set': theme}, True)
 
 def write_themes_yaml():
     with open(setting['themes'], 'w') as f:
@@ -651,36 +635,80 @@ def update_themes():
     Get a new theme and togetter url from the official account's tweets, 
     and count tweets of the date in the database.
     '''
-    res = t.get_user_timeline(screen_name='precure_1draw', count=100)
+    res = t.get_user_timeline(screen_name=setting['accounts'], count=100)
 
-    # insert new theme of the day
+    # update theme and togetter
     for tweet in res:
         date = get_date(tweet['created_at'])
+
+        # shift to next event day
+        if genre == 'pripara_prpr':
+            if date.weekday() == parse('wed').weekday():
+                date += datetime.timedelta(days=3)
+            elif date.weekday() == parse('sat').weekday():
+                date += datetime.timedelta(days=4)
+        
+        # insert new theme of the day
         if not themes.find({'date': date}).count():
-            match = re.findall('(?:“|”|\'|")(.+?)(?:“|”|\'|")', tweet['text'])
+            match = re.findall(setting['theme_regex'], tweet['text'])
+
             if match:
                 theme = {}
                 theme_name = ' / '.join(match)
                 theme['theme'] = theme_name
-                same_theme = themes.find_one({'theme': theme_name})
-                if same_theme:
+
+                # if there has already exists the same theme, copy theme_en and category
+                same_theme = themes.find({'theme': theme_name}).sort([('meta.date', -1)])
+
+                # copy theme
+                if same_theme.count():
+                    same_theme = same_theme[0]
+                    theme['category'] = same_theme['category']
                     theme['theme_en'] = same_theme['theme_en']
+
+                # otherwise, initialize
                 else:
+                    theme['category'] = ['uncategorized']
                     theme['theme_en'] = ''
-                theme['category'] = ['uncategorized']
+
+                # for request theme
+                match = re.search(r'\(.*リクエスト.*\)', tweet['text'])
+                if match:
+                    theme['category'].append('request')
+                    theme['theme'] = re.sub('\(.*リクエスト.*\)', '', theme['theme'])
+
+                # for season theme
+                match = re.search(r'\(.*季節.*\)', tweet['text'])
+                if match:
+                    theme['category'] = ['season']
+                    theme['theme'] = re.sub('\(.*季節.*\)', '', theme['theme'])
+
+                # for cloth theme
+                match = re.search(r'\(.*衣装.*\)', tweet['text'])
+                if match:
+                    theme['category'] = ['clothes']
+                    theme['theme'] = re.sub('\(.*衣装.*\)', '', theme['theme'])
+                    
+                # debug
+                # print('-'*16)
+                # print(get_date(tweet['created_at']))
+                # print(tweet['text'])
+                # print(date, theme)
+
+                # update database
                 themes.update({'date': date}, {'$set': theme}, True)
-                t.retweet(id=tweet['id']) # retweet a official theme tweet
-        else:
-            break
 
-    # update togetter url
-    for i in themes.find({'togetter': {'$exists': False}}).sort('date'):
-        date = i['date']
-        tweet = tweets.find_one({'meta.date': date, 'tweet.user.screen_name': 'precure_1draw'})
-        if tweet:
-            togetter = tweet['tweet']['entities']['urls'][0]['expanded_url']
-            themes.update({'date': date}, {'$set': {'togetter': togetter}}, True)
+                # retweet a official theme tweet
+                t.retweet(id=tweet['id'])
 
+        # update togetter url
+        if setting['togetter']:
+            non_togetter_tweets = themes.find({'date': date, 'togetter': {'$exists': False}})
+            if non_togetter_tweets.count():
+                if tweet['entities']['urls'] and 'togetter.com/li/' in tweet['entities']['urls'][0]['expanded_url']:
+                    togetter = tweet['entities']['urls'][0]['expanded_url']
+                    themes.update({'date': date}, {'$set': {'togetter': togetter}}, True)
+            
     # count event number and work number
     for num, theme in enumerate(themes.find().sort('date')):
         work_num = tweets.find({'meta.date': theme['date'], 'meta.removed': False, 'meta.deny_collection': False}).count()
@@ -688,7 +716,7 @@ def update_themes():
 
     # count user number
     for date in themes.distinct('date'):
-        if date == '0-misc':
+        if not date:
             themes.update({'date': date}, {'$set': {'user_num': 0}})
         else:
             user_num = len(tweets.find({'meta.date': {'$lte': date}, 'meta.deny_collection': False, 'meta.removed': False}).distinct('tweet.user.id'))
@@ -697,7 +725,7 @@ def update_themes():
     write_themes_yaml()
 
 def update_users():
-    user_ids = tweets.find({'meta.deny_collection': False, 'meta.removed': False, 'tweet.user.screen_name': {'$not': re.compile(r'^precure_1draw$')}}).distinct('tweet.user.id')
+    user_ids = tweets.find({'meta.deny_collection': False, 'meta.removed': False, 'tweet.user.screen_name': {'$not': re.compile(r'^' + setting['accounts'][0] + '$')}}).distinct('tweet.user.id')
     users.remove()
     for user_id in user_ids:
         user = {}
@@ -707,7 +735,7 @@ def update_users():
         users.update({'id': user_id }, {'$set': {'id': user_id, 'num': num, 'class': cls, 'user': tweet['tweet']['user']}}, True)
 
 def update_infos():
-    with open(setting['info_file']) as f:
+    with open(setting['info']) as f:
         infos_yaml = yaml.load(f)
     for id, info in enumerate(reversed(infos_yaml)):
         info_dict = {}
@@ -717,26 +745,6 @@ def update_infos():
         print(info_dict)
         infos.update({'id': id}, info_dict, True)
 
-def print_first_participants():
-    with open(setting['themes'], 'r+') as f:
-        fcntl.flock(f, fcntl.LOCK_EX)
-        themes = yaml.load(f)
-
-        users = []
-        for date in sorted(themes):
-            if date != '0-misc':
-                print('-'*8)
-                print(date)
-                tweets = get_tweets('meta.date', date)
-                old = set(users)
-                users.extend([t['tweet']['user']['id'] for t in tweets])
-                new = set(users) - old
-                print(new)
-                for text in [tweet['tweet']['text'] for tweet in tweets if tweet['tweet']['user']['id'] in new]:
-                    print('*', text)
-                # print(set(users))
-                print(len(new))
-                
 def get_user_work_number(id):
     '''Return the number of the id tweet work of the user.'''
     screen_name = get_tweets('meta.id', id)[0]['tweet']['user']['screen_name']
@@ -802,6 +810,7 @@ def update_labels_all():
                 
             imgs = tweet['meta']['imgs']
             if imgs and '/tweet_video_thumb/' in str(imgs[0]['img_url']): # str() for bool value
+                print(tweet)
                 labels.append('GIF')
            
             if not labels:
@@ -812,7 +821,7 @@ def update_labels_all():
         
 def chart():
     def col_list(key):
-        return [i[key] for i in themes.find().sort('num') if i['date'] != '0-misc']
+        return [i[key] for i in themes.find().sort('num') if i['date']]
 
     days = col_list('num')
     nums = col_list('work_num')
@@ -835,9 +844,9 @@ def chart():
     ax2.set_ylim(0, max(nums) + 15)
 
     # set locator
-    ax1.xaxis.set_major_locator(plt.MultipleLocator(10))
+    ax1.xaxis.set_major_locator(plt.MultipleLocator(25))
     ax1.yaxis.set_major_locator(plt.MultipleLocator(100))
-    ax2.xaxis.set_major_locator(plt.MultipleLocator(10))
+    ax2.xaxis.set_major_locator(plt.MultipleLocator(25))
     ax2.yaxis.set_major_locator(plt.MultipleLocator(25))
 
     # set grid
@@ -856,14 +865,16 @@ def chart():
 
      
     #plt.title('作品数の変化', fontproperties=fp)
-    plt.savefig(setting['static_dir'] + 'chart.svg')
+    for static_dir in setting['static_dirs']:
+        plt.savefig(static_dir + 'chart.svg')
 
     # en
     ax1.set_xlabel('#', fontproperties=fp)
     ax1.set_ylabel('Total perticipants')
     ax2.set_ylabel('Works')
     ax1.legend([p1, p2], ['Total perticipants', 'Works'], loc='upper left')
-    plt.savefig(setting['static_dir'] + 'chart-en.svg')
+    for static_dir in setting['static_dirs']:
+        plt.savefig(static_dir + 'chart-en.svg')
 
 def fav_plus_rt(tweet):
     fav = tweet['tweet']['favorite_count']
@@ -906,97 +917,16 @@ def generate_rank_html():
             save_dir = setting['img_dir'] + user_tweet['tweet']['user']['id_str']
             if not path.exists(save_dir):
                 os.mkdir(save_dir)
-            filename = theme['date'] + '.svg'
+            filename = str(theme['date'].date()) + '.svg'
             plt.savefig(save_dir +  '/' + filename)
             plt.close()
          
             total = len(favs[theme['date']])
-            rank = sorted(favs[theme['date']], reverse=True).index(user_fav)
+            rank = sorted(favs[theme['date']], reverse=True).index(user_fav) + 1
             percent = int((rank / total) * 100)
          
-            imgs.append('''<p style="margin-left: 4em;">[{}] {} - {}<br>Fav+RT: {}<br>Rank: {} / {} ({}%)</p>
-            <img src="{img}" style="max-width: 500px;">
-            <img id="{src}" src="{src}">'''.format('-'.join(user_tweet['meta']['labels']), theme['date'], theme['theme'], user_fav, rank+1, total, percent, src='{{% static "precure_1draw_collections/img/{}/{}" %}}'.format(user_tweet['tweet']['user']['id'], filename), img='{{% static "precure_1draw_collections/img/{}/{}" %}}'.format(user_tweet['tweet']['user']['id'], user_tweet['meta']['imgs'][0]['filename'])))
+            text = 'Fav+RT: {}<br>Rank: {} / {} ({}%)'.format(user_fav, rank, total, percent)
      
-# admin
-def handle_admin_actions():
-    with open(setting['admin_actions'], 'r+') as f:
-        fcntl.flock(f, fcntl.LOCK_EX)
-        actions = yaml.load(f)
-
-        for time, item in actions.items():
-            if not item['done']:
-                action = item['action']
-                args = item['args']
-                id = item['id']
-                if action == 'rotate':
-                    action_rotate(id, args['angle'])
-                elif action == 'remove':
-                    action_remove(id)
-                elif action == 'move':
-                    action_move(id, args['dest'])
-                elif action == 'deny_collection_user':
-                    action_deny_collection_user(id)
-                elif action == 'ignore_user':
-                    action_ignore_user(id)
-        for time, item in actions.items():
-             item['done'] = True
-        f.seek(0)
-        f.truncate()
-        yaml.dump(actions, f)
-        
-    generate_admin_history_html()
-
-def generate_admin_history_html():
-    with open(setting['admin_actions']) as f:
-        actions = yaml.load(f)
-        tr = [actions_history_tr(time, item) for time, item in reversed(sorted(actions.items()))]
-        tr = '\n\n'.join(tr)
-
-        with open(setting['admin_actions_history_html']) as f:
-            template = f.read()
-        html = template.format(tr=tr, last_update=last_update())
-
-        with open(setting['html_dir'] + 'date/admin-history.html', 'w') as f:
-            f.write(html)
-                
-def actions_history_tr(time, actions):
-    id = actions.pop('id')
-    action = actions.pop('action')
-    if action == 'rotate':
-        if actions['args']['angle'] == 'left':
-            action = '反時計回りに90°回転する'
-        elif actions['args']['angle'] == 'right':
-            action = '時計回りに90°回転する'
-    elif action == 'remove':
-        action = 'まとめから削除する'
-    elif action == 'ignore_user':
-        action = '迷惑ユーザーに追加する'
-    elif action == 'move':
-        with open(setting['themes']) as f:
-            fcntl.flock(f, fcntl.LOCK_EX)
-            themes = yaml.load(f)
-        date = get_tweets('meta.id', id)[0]['date']
-        action = '「{} - {}」へ移動する'.format(actions['args']['dest'], themes[actions['args']['dest']]['theme'])
-        
-    args = ['{arg}: {val}'.format(arg=arg, val=val) for arg, val in actions.items()]
-    args = ' / '.join(args)
-    time = time.strftime('%Y年%m月%d日 %H:%M')
-    user = get_tweets('meta.id', id)[0]['tweet']['user']['screen_name']
-    admin = actions['admin']
-    if actions['done']:
-        done = '実行済み'
-    else:
-        done = '未完了'
-    tr = '''<tr>
-  <td class="time">{time}</td>
-  <td class="id"><a href="https://twitter.com/{user}/status/{id}"><i class="fa fa-square fa-lg" style="color: skyblue" title="ツイートページを見る"></i></a></td>
-  <td class="action">{action}</td>
-  <td class="user">{admin}</td>
-  <td class="done">{done}</td>
-</tr>'''.format(time=time, user=user, id=id, action=action, admin=admin, done=done)
-    return tr
-
 # global action
 def action_add_exception(id):
     '''Add a tweet by id as a exception.'''
@@ -1063,71 +993,41 @@ def action_ignore_user(id, un=False):
         f.truncate()
         yaml.dump(ignores, f, allow_unicode=True)
 
-def import_ids(file):
+def import_ids(file, retweet=False):
     with open(file) as f:
-        ids = f.read().split()
-    for i, id in enumerate(ids):
+        if file.endswith('.json'):
+            ids = json.load(f)
+        elif file.endswith('.yaml'):
+            ids = yaml.load(f)
+        else:
+            ids = f.read().split()
+    for i, id in enumerate(sorted(ids)):
         print('-' * 16)
         print('import:', id)
-        tweet = retweet_and_record(id=id, retweet=False)
-        print_tweet_summary(i, tweet)
+        retweet_and_record(id=id, retweet=retweet)
+        tweet = tweets.find_one({'meta.id': id})
+        if tweet:
+            print_tweet_summary(i, tweet)
+        else:
+            print('this tweet was skipped')
 
-def api_get_tweets(screen_name=''):
-    """
-    Get user timeline as much as possible.
-    Return: list of tweets
-    """
-    tweets = []
-    max_id = None
-    duplicate = 0
-    for i in range(1, 30):
-        res = t.get_user_timeline(screen_name=screen_name, count=200, max_id=max_id)
-        tweets.extend(res)
-        if max_id == res[-1]['id']:
-            duplicate += 1
-            print('duplicate', duplicate)
-            if duplicate > 1:
-                break
-        else:
-            duplicate = 0
-            max_id = res[-1]['id']
-            print('{}回目 max_id: {}'.format(i, max_id))
-    for tweet in tweets:
-        if '#' in tweet['text']:
-            print(tweet['text'])
-        
-def get_tweets_from_precure_1draw():
-    tweets = []
-    max_id = None
-    duplicate = 0
-    for i in range(1, 30):
-        res = t.get_user_timeline(screen_name='precure_1draw', count=200, max_id=max_id)
-        tweets.extend(res)
-        if max_id == res[-1]['id']:
-            duplicate += 1
-            print('duplicate', duplicate)
-            if duplicate > 1:
-                break
-        else:
-            duplicate = 0
-            max_id = res[-1]['id']
-            print('{}回目 max_id: {}'.format(i, max_id))
-    with open('tweets_of_precure_1draw.json', 'w') as f:
-        json.dump(tweets, f)
-        
 def show_status(id):
     if has_id(id):
         print_tweet(id)
     else:
-        tweet = t.show_status(id=id)
+        tweet = {}
+        tweet['tweet'] = t.show_status(id=id)
         print_tweet(tweet=tweet)
 
 if __name__ == '__main__':
 
-    # run the given function
+    # run the gfunction
     if len(sys.argv) < 3:
+
         print('Usage:', sys.argv[0], 'genre_name func()')
+
     elif len(sys.argv) == 3:
+
         # load setting file
         genre = sys.argv[1]
         with open('settings.yaml') as f:

@@ -3,19 +3,21 @@ precure:
   credentials: 'precure/.credentials'
   # directory
   img_dir: 'precure/img/'
-  static_dir: 'precure/static/'
+  static_dirs: ['precure/static/', 'precure/static-dev/']
   # setting files
   themes: 'precure/themes.yaml'
-  ignores: 'precure/ignores.yaml'
+  ignores: 'ignores.yaml'
   info: 'precure/info.yaml'
   rank_users: 'precure/rank_users.yaml'
   # inside files
   update_date_que: 'precure/update_date_que.yaml'
-  admin_actions: 'precure/html/mongo/date/admin_actions.yaml'
-  admin_actions_history_html: 'precure/templates/admin_actions_history.html'
   # constants
-  hash_tags: ['プリキュア版深夜の真剣お絵描き60分一本勝負', 'プリキュア版深夜の真剣お絵描き60秒一本勝負']
-  triger: 'http'
+  hash_tag: 'プリキュア版深夜の真剣お絵描き60分一本勝負'
+  togetter: True
+  accounts: 'precure_1draw'
+  theme_regex: "(?:“|”|'|\")(.+?)(?:“|”|'|\")"
+  start_time: '23:00'
+
 pripara:
   # secret
   credentials: 'pripara/.credentials'
@@ -23,13 +25,33 @@ pripara:
   img_dir: 'pripara/img/'
   # setting files
   themes: 'pripara/themes.yaml'
-  ignores: 'pripara/ignores.yaml'
+  ignores: 'ignores.yaml'
   info: 'pripara/info.yaml'
   rank_users: 'pripara/rank_users.yaml'
   # inside files
   update_date_que: 'pripara/update_date_que.yaml'
-  admin_actions: 'pripara/html/mongo/date/admin_actions.yaml'
-  admin_actions_history_html: 'pripara/templates/admin_actions_history.html'
   # constants
-  hash_tags: ['prpr版深夜の真剣お絵描き60分一本勝負']
-  triger: 'http'
+  hash_tag: 'プリパラ版深夜の真剣お絵描き60分一本勝負'
+  togetter: False
+  accounts: 'PRPR_1draw'
+  theme_regex: "お題.*?「(.+?)」"
+  start_time: '23:00'
+
+pripara_prpr:
+  # secret
+  credentials: 'pripara_prpr/.credentials'
+  # directory
+  img_dir: 'pripara_prpr/img/'
+  # setting files
+  themes: 'pripara_prpr/themes.yaml'
+  ignores: 'ignores.yaml'
+  info: 'pripara_prpr/info.yaml'
+  rank_users: 'pripara_prpr/rank_users.yaml'
+  # inside files
+  update_date_que: 'pripara_prpr/update_date_que.yaml'
+  # constants
+  hash_tag: 'prpr版深夜の真剣お絵描き60分一本勝負'
+  togetter: False
+  accounts: 'prpr_1drow'
+  theme_regex: "お題.*?【(.+?)】(?:.*\n.*)*開催"
+  start_time: '22:00'
