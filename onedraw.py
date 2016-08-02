@@ -16,6 +16,7 @@ from io import BytesIO
 import subprocess
 import urllib
 from collections import deque
+import base64
 
 from pprint import pprint
 from pymongo import Connection
@@ -30,6 +31,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
 import numpy as np
+from googleapiclient.discovery import build
 
 # init
 def auth():
@@ -246,7 +248,7 @@ def tweet_filter(tweet, new=False):
                                                      for ignore_url in ignores['ignore_url']
                                                      for url in tweet['tweet']['entities']['urls']]):
         hit = 'Hit ignore_url:'
-    # if fficial retweet
+    # if official retweet
     elif tweet['tweet']['entities']['user_mentions']:
         hit = 'Including user mentions:'
         return False
@@ -267,8 +269,12 @@ def tweet_filter(tweet, new=False):
         for user in ignores['ignore_user']:
             if re.search(str(user), tweet['tweet']['user']['screen_name']) or re.search(str(user), tweet['tweet']['user']['id_str']):
                 hit = 'Hit ignore_user "{}":'.format(user)
+    # if unsafe images
+    elif tweets.find({'tweet.user.screen_name': tweet['tweet']['user']['screen_name']}).count() == 0 \
+         and is_unsafe_image(tweet['tweet']):
+            hit = 'Hit unsafe image:'
+    # if including ignore_word
     else:
-        # if including ignore_word
         for word in ignores['ignore_word']:
             if re.search(word, tweet['tweet']['text']): 
                 hit += 'Hit ignore_word "{}":'.format(word)
@@ -284,6 +290,47 @@ def record_user(screen_name):
     tweets = t.get_user_timeline(screen_name=screen_name, count=100)
     for tweet in tweets:
         retweet_and_record(tweet=tweet, retweet=False)
+
+def is_unsafe_image(tweet):
+    """
+    Detect whether the tweet includes unsafe images by Google Clould Vision API.
+    """
+    # Get image url from tweet
+
+    # The tweet has official images
+    if 'extended_entities' in tweet and 'media' in tweet['extended_entities']:
+        url = tweet['extended_entities']['media'][0]['media_url']
+    elif 'media' in tweet['entities']:
+        url = tweet['entities']['media'][0]['media_url']
+    else:
+        # if not images, pass the check
+        return False
+
+    # Request for Google Cloud Vision API
+    r = requests.get(url)
+    image = base64.b64encode(r.content).decode('UTF-8')
+    body = {
+        "requests": [
+            {
+                'image': {
+                    'content': image,
+                },
+                "features": [
+                    {
+                        "type": "SAFE_SEARCH_DETECTION",
+                    },
+                ]
+            },
+        ]
+    }
+    res = vision.images().annotate(body=body).execute()
+
+    # Chack unsafe possibility
+    annotation = res['responses'][0]['safeSearchAnnotation']
+    unsafe_possible = any([possibility in ['POSSIBLE', 'LIKELY', 'VERY_LIKELY']
+                           for possibility in annotation.values()])
+
+    return unsafe_possible
 
 # image
 def store_image(id):
@@ -1035,9 +1082,14 @@ if __name__ == '__main__':
         with open('settings.yaml') as f:
             setting = yaml.load(f)[genre]
 
-        # prepend twitter object
+        # prepare twitter object
         t = auth()
         stream = stream_auth()
+
+        #  prepare Google Cloud Vision API
+        with open('.google-api-key') as f:
+            key = f.read().strip()
+        vision = build('vision', 'v1', developerKey=key)
     
         tweets = eval('Connection().' + genre + '_1draw_collections.tweets')
         themes = eval('Connection().' + genre + '_1draw_collections.themes')
