@@ -19,16 +19,13 @@ from collections import deque
 
 from pprint import pprint
 from pymongo import Connection
-import sqlite3
 import pytz
 import yaml
 from dateutil.parser import parse
 import simplejson as json
 import requests
 from bs4 import BeautifulSoup
-from twython import Twython
-from twython import TwythonStreamer
-from twython import TwythonError
+from twython import Twython, TwythonStreamer, TwythonError
 from PIL import Image
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
@@ -689,6 +686,12 @@ def update_themes():
                     theme['category'] = ['clothes']
                     theme['theme'] = re.sub('\(.*衣装.*\)', '', theme['theme'])
                     
+                # for episode theme
+                match = re.search(r'\(.*エピソード.*\)', tweet['text'])
+                if match:
+                    theme['category'] = ['episode']
+                    theme['theme'] = re.sub('\(.*エピソード.*\)', '', theme['theme'])
+                    
                 # debug
                 # print('-'*16)
                 # print(get_date(tweet['created_at']))
@@ -725,14 +728,13 @@ def update_themes():
     write_themes_yaml()
 
 def update_users():
-    user_ids = tweets.find({'meta.deny_collection': False, 'meta.removed': False, 'tweet.user.screen_name': {'$not': re.compile(r'^' + setting['accounts'][0] + '$')}}).distinct('tweet.user.id')
+    user_screen_names = tweets.find({'meta.deny_collection': False, 'meta.removed': False, 'tweet.user.screen_name': {'$not': re.compile(r'^' + setting['accounts'][0] + '$')}}).distinct('tweet.user.screen_name')
     users.remove()
-    for user_id in user_ids:
-        user = {}
-        tweet = tweets.find({'tweet.user.id': user_id}, {'meta.id': {'$slice': -1}})[0] # get the latest tweet
-        num = tweets.find({'tweet.user.id': user_id, 'meta.removed': False}).count()
+    for user_screen_name in user_screen_names:
+        tweet = tweets.find({'tweet.user.screen_name': user_screen_name}, {'meta.id': {'$slice': -1}})[0] # get the latest tweet
+        num = tweets.find({'tweet.user.screen_name': user_screen_name, 'meta.removed': False}).count()
         cls = num // 10 * 10
-        users.update({'id': user_id }, {'$set': {'id': user_id, 'num': num, 'class': cls, 'user': tweet['tweet']['user']}}, True)
+        users.update({'id': user_screen_name }, {'$set': {'screen_name': user_screen_name, 'num': num, 'class': cls, 'user': tweet['tweet']['user']}}, True)
 
 def update_infos():
     with open(setting['info']) as f:
