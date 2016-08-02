@@ -1,12 +1,16 @@
 - show: True
+  date: 2015/11/04
+  ja: 「お気に入り★」を「いいね♥」に変更しました。
+  en: Replace "Favorite★" by "Like♥".
+- show: False
   date: 2015/02/19
   ja: 「参加者の一覧ページ(参加回数順)」で名前で検索ができるようになりました。
   en: Added a function to search by username in the Participants List page.
-- show: True
+- show: False
   date: 2015/02/14
   ja: 過去にアカウントに鍵をかけていた参加者のイラストの一部が表示されなくなっていたのを修正しました。
   en: Fixed the problem that a part of illustrations of the participants who locked his/her accounts before is not shown in the page.
-- show: True
+- show: False
   date: 2014/11/13
   ja: テーマの種類を表すアイコンとその凡例を追加しました。
   en: Added icons for specific themes and that explanation.
