@@ -1,11 +1,15 @@
-deny_collection_gallery_user: []
 deny_collection_user: [rursc, havefan77, 551217865]
-deny_retweet_user: []
 ignore_id: []
-ignore_url: [tumblr.com, tmblr.co, netbura.com, sakuramochi.mydns.jp, ift.tt, makebot, youtube.com, youtu.be, soundcloud.com, Instagram.com, paper.li]
+ignore_url: [tumblr.com, tmblr.co, netbura.com, sakuramochi.mydns.jp, ift.tt, makebot,
+  youtube.com, youtu.be, soundcloud.com, Instagram.com, paper.li]
 ignore_user: [real_time_words, school_neta, athetoy, to1jp, yuzugoma621, yseiiii,
   2280507804, prin_8_, twitkakusan, TheWolfBunny, localCarInfo, mohikan_man, 628957268,
   galactic_r, galactic_r, 2489588726, 1000favimage, 1256219017, Rolex_best, 405443349,
-  DICK8969, KUJINO_JK, EROYP, 1084637862, 591579044, 1630829676, rxnrx, 1000favs_BOT, 1000_okini_himi, abreaknet, 'Precure_(a|b|c).?100\d', CureAwake, 7tpqm, yasu4201, sofimisei, '1000fav.*', comp_reviews, all_ranking1, anime_manga1, cejixoxucure, kivyfygoluw, pafadihevyk, fipuzehetuz, jogynoviros, 7ala_7ob, oekakitter_adm, Dorami_Lovely, watakusa311, 1453655371, RinaK10, cure_advance, nanasaki171, 
-]
+  DICK8969, KUJINO_JK, EROYP, 1084637862, 591579044, 1630829676, rxnrx, 1000favs_BOT,
+  1000_okini_himi, abreaknet, 'Precure_(a|b|c).?100\d', CureAwake, 7tpqm, yasu4201,
+  sofimisei, 1000fav.*, comp_reviews, all_ranking1, anime_manga1, cejixoxucure, kivyfygoluw,
+  pafadihevyk, fipuzehetuz, jogynoviros, 7ala_7ob, oekakitter_adm, Dorami_Lovely,
+  watakusa311, 1453655371, RinaK10, nanasaki171, popotan_precure, nanasaki171, 746549555655675904,
+  yuzugoma621, 623444202, cure_advance, 375515688, niratamasan5, 764100704663277569,
+  koufuku_q, 765556115576807424, Alice_Yotsuba_, 765302469094060032]
 ignore_word: [【RT\d+FA\d+】, ツイート/分, \bRT\b, 話題のワード, 【To-1]
