@@ -24,23 +24,49 @@ import simplejson as json
 import requests
 from bs4 import BeautifulSoup
 from PIL import Image
-import matplotlib.pyplot as plt
-from matplotlib.font_manager import FontProperties
-import numpy as np
+# import matplotlib.pyplot as plt
+# from matplotlib.font_manager import FontProperties
+# import numpy as np
 from googleapiclient.discovery import build
 from get_tweepy import *
 
-def save_tweet(must_retweet=True):
+def save_tweet(must_retweet=True, ids=None, screen_names=None):
+    """Retweet tweets which have the hash_tag by REST API.
+
+    Args:
+        must_retweet:
+            Save the tweet but does not retweet it if False.
+        ids:
+            Gets tweets of the ids not tag search results.
     """
-    Retweet tweets which have the hash_tag by REST API.
-    """
-    ts = [t for t in tweepy.Cursor(api.search, q='#' + setting['hash_tag'] + ' -RT', count=200).items(500)]
+    if ids:
+        ts = api.statuses_lookup(ids, tweet_mode='extended')
+        ts = list(map(assign_text_to_full_text, ts))
+    elif screen_names:
+        ts = []
+        for sn in screen_names:
+            ts += [t for t in tweepy.Cursor(api.user_timeline,
+                                           screen_name=sn,
+                                           count=200,
+                                           tweet_mode='extended').items(2000)]
+        ts = [t for t in map(assign_text_to_full_text, ts) if is_right_tweet(t)]
+    else:
+        ts = [t for t in tweepy.Cursor(api.search,
+                                       q='#' + setting['hash_tag'] + ' -RT',
+                                       count=200,
+                                       tweet_mode='extended').items(500)]
+        ts = list(map(assign_text_to_full_text, ts))
     for t in reversed(ts):
         if is_right_tweet(t):
             record(t)
             store_image(t.id)
             if must_retweet:
                 retweet(t)
+
+def assign_text_to_full_text(t):
+    t.text = t.full_text
+    t._json['text'] = t._json['full_text']
+    return t
 
 def is_right_tweet(t):
     """
@@ -63,9 +89,10 @@ def retweet(t):
     """
     try:
         res = t.retweet()
+        id = res.id
     except tweepy.TweepError as e:
         if e.api_code == 327: # already retweeted
-            pass
+            id = t.id
         else:
             raise
     tweets.update({'_id': t.id},
@@ -145,13 +172,13 @@ def retweet_and_record(tweet=False, id=False, retweet=True, fetch=True, exceptio
     if id:
         if fetch:
             try:
-                tweet = t.show_status(id=id)
+                tweet = api.get_status(id=id)
                 if has_id(id):
                     set_value(id, 'meta.removed', False)
                 
-            except TwythonError as e:
+            except TweepError as e:
                 print('-' * 16)
-                if e.error_code == 404:   # tweet was deleted
+                if e.api_code == 404:   # tweet was deleted
                     if has_id(id):
                         set_value(id, 'meta.removed', 'deleted')
                         print('404 Not found and marked "deleted":', id)
@@ -159,7 +186,7 @@ def retweet_and_record(tweet=False, id=False, retweet=True, fetch=True, exceptio
                         return None
                     else:
                         print('404 Not found and not in database:', id)
-                elif e.error_code == 403:   # accound has been locked
+                elif e.api_code == 403:   # accound has been locked
                     if has_id(id):
                         set_value(id, 'meta.removed','locked')
                         print('403 Tweet has been locked and marked "locked":', id)
@@ -168,7 +195,7 @@ def retweet_and_record(tweet=False, id=False, retweet=True, fetch=True, exceptio
                     else:
                         print('403 Tweet has been locked and not in database:', id)
                         return None
-                elif e.error_code == 429: # API remaining = 0
+                elif e.api_code == 429: # API remaining = 0
                     print('api not remaining')
                     return get_tweets('_id', id)[0]
                 else:
@@ -209,9 +236,9 @@ def including_hash_tag(t):
         for tweet_tag in tweet_tags:
             if difflib.get_close_matches(tweet_tag['text'], [setting['hash_tag']]):
                 return True
-    # 2. or if any similar hash_tags in tweet['text']
-    for match in re.finditer('深夜の', tweet['tweet']['text']):
-        tweet_tag = tweet['tweet']['text'][match.start()-6:match.start()+16]
+    # 2. or if any similar hash_tags in the text
+    for match in re.finditer('深夜の', t.text):
+        tweet_tag = t.text[match.start()-6:match.start()+16]
         if difflib.get_close_matches(tweet_tag, [setting['hash_tag']]):
             return True
     # otherwise, not including any hash_tag
@@ -249,15 +276,17 @@ def is_not_spam(t):
     # if ignore_user
     elif t.user.id in ignores['ignore_user'] or t.user.screen_name in ignores['ignore_user']:
         spam = 'Hit ignore_user "{}":'.format(t.user.screen_name)
-    # if unsafe images
-    elif tweets.find({'tweet.user.screen_name': t.user.screen_name}).count() == 0 \
-         and is_unsafe_image(t):
-        add_ignore_users(t.user.id)
-        cancel_user_retweet(t.user.id)
-        spam = 'Hit unsafe image:'
-    # if recently created account
-    elif t.user.created_at > datetime.datetime.now() - datetime.timedelta(weeks=4):
-        spam = 'Hit too recently created:'
+    # not in white list users
+    elif not t.user.screen_name in ignores['white_user'] or t.user.id in ignores['white_user']:
+        # if recently created account
+        if t.user.created_at > datetime.datetime.now() - datetime.timedelta(weeks=1):
+            spam = 'Hit too recently created:'
+        # if unsafe images
+        elif tweets.find({'tweet.user.screen_name': t.user.screen_name}).count() == 0 \
+             and is_unsafe_image(t):
+            add_ignore_users(t.user.id)
+            cancel_user_retweet(t.user.id)
+            spam = 'Hit unsafe image:'
     # if including ignore_word
     else:
         for word in ignores['ignore_word']:
@@ -266,6 +295,7 @@ def is_not_spam(t):
     if spam:
         print('-' * 16)
         print(spam)
+        print_tweet(t)
         return False
     else:
         return True
@@ -340,7 +370,8 @@ def record_user(screen_name):
     """
     Record all the tweets of the user.
     """
-    ts = api.user_timeline(screen_name=screen_name, count=100)
+    ts = api.user_timeline(screen_name=screen_name, count=100, tweet_mode='extended')
+    ts = map(assign_text_to_full_text, ts)
     for t in ts:
         save_tweet(t, retweet=False)
 
@@ -348,6 +379,8 @@ def is_unsafe_image(t):
     """
     Detect whether the tweet includes unsafe images by Google Cloud Vision API.
     """
+    print_tweet(t)
+
     # Get image url from tweet
 
     # The tweet has official images
@@ -379,12 +412,12 @@ def is_unsafe_image(t):
 
         # Chack unsafe possibility
         annotation = res['responses'][0]['safeSearchAnnotation']
-        print('Found unsafe image: ', t.id)
-        print(annotation)
         annotation.pop('spoof')
-        unsafe_possible = any([possibility in ['POSSIBLE', 'LIKELY', 'VERY_LIKELY']
+        print(annotation)
+        unsafe_possible = any([possibility in ['LIKELY', 'VERY_LIKELY']
                                for possibility in annotation.values()])
         if unsafe_possible:
+            print('Found unsafe image:')
             return True
 
     return False
@@ -462,15 +495,6 @@ def store_image(id):
                 ext = Image.open(BytesIO(img)).format.lower()
                 filename = os.path.basename(img_url) + '.' + ext
 
-            # save image
-            save_dir = setting['img_dir'] + tweet['user']['id_str'] + '/'
-            if not os.path.exists(save_dir):
-                os.mkdir(save_dir)
-            with open(save_dir + filename, 'wb') as f2:
-                f2.write(img)
-                print('-' * 16)
-                print('downloading image:')
-                print('   {}\n-> {}\n-> {}'.format(url, img_url, save_dir + filename))
         else:
             filename = False
             print('No image exists.')
@@ -514,11 +538,28 @@ def get_tweets(key=None, value=None, sort=None):
     else:
         raise Error('Error: Give get_tweets key-value pair')
 
-def print_tweet(id=0, tweet=None):
-    if id:
-        tweet = tweets.find_one({'_id': id})
-    print('https://twitter.com/{}/status/{}'.format(tweet['tweet']['user']['screen_name'], tweet['tweet']['id']))
-    pprint(tweet)
+def print_tweet(t):
+    if type(t) == dict:
+        t = t['tweet']
+    elif type(t) == tweepy.Status:
+        t = t._json
+    else:
+        raise TypeError
+
+    # Print tweet
+    tweet_url = 'https://twitter.com/{name}/status/{id}'.format(
+        name=t['user']['screen_name'],
+        id=t['id'],
+    )
+
+    print(t['created_at'], '/ ♡ {} ↻ {} / {}'.format(
+        t['favorite_count'],
+        t['retweet_count'],
+        tweet_url,
+    ))
+    print('{}(@{})'.format(t['user']['name'], t['user']['screen_name']))
+    print(t['text'])
+    print('-' * 8)
 
 def update_date(daily=False, date=''):
     '''
@@ -594,10 +635,11 @@ def sleep_until_api_reset():
         now = datetime.datetime.now()
         time.sleep((reset - now).seconds + 10)
 
-def read_themes_yaml():
+def save_themes_yaml():
     with open(setting['themes']) as f:
         fcntl.flock(f, fcntl.LOCK_SH)
         themes_yaml = yaml.load(f)
+        print(themes_yaml)
     for theme in themes_yaml:
         themes.update({'date': theme['date']}, {'$set': theme}, True)
 
@@ -611,7 +653,8 @@ def update_themes():
     Get a new theme and togetter url from the official account's tweets, 
     and count tweets of the date in the database.
     '''
-    ts = api.user_timeline(screen_name=setting['account'], count=100)
+    ts = api.user_timeline(screen_name=setting['account'], count=100, tweet_mode='extended')
+    ts = map(assign_text_to_full_text, ts)
 
     # update theme and togetter
     for t in ts:
@@ -700,13 +743,32 @@ def update_themes():
     write_themes_yaml()
 
 def update_users():
-    user_screen_names = tweets.find({'meta.deny_collection': False, 'meta.removed': False, 'tweet.user.screen_name': {'$not': re.compile(r'^' + setting['account'][0] + '$')}}).distinct('tweet.user.screen_name')
+    user_screen_names = tweets.find({
+        'meta.deny_collection': False,
+        'meta.removed': False,
+        'tweet.user.screen_name': {
+            '$not': re.compile(r'^{}$'.format(setting['account'][0])),
+        },
+    }).distinct('tweet.user.screen_name')
     users.remove()
     for user_screen_name in user_screen_names:
-        tweet = tweets.find({'tweet.user.screen_name': user_screen_name}, {'_id': {'$slice': -1}})[0] # get the latest tweet
+        # get the latest tweet
+        tweet = tweets.find(
+            {'tweet.user.screen_name': user_screen_name},
+            {'_id': {'$slice': -1}}
+        )[0]
         num = tweets.find({'tweet.user.screen_name': user_screen_name, 'meta.removed': False}).count()
         cls = num // 10 * 10
-        users.update({'id': user_screen_name }, {'$set': {'screen_name': user_screen_name, 'num': num, 'class': cls, 'user': tweet['tweet']['user']}}, True)
+        users.update_one(
+            {'id': user_screen_name },
+            {'$set': {
+                'screen_name': user_screen_name,
+                'num': num,
+                'class': cls,
+                'user': tweet['tweet']['user']}
+            },
+            upsert=True,
+        )
 
 def update_infos():
     with open(setting['info']) as f:
@@ -901,11 +963,11 @@ def fav_plus_rt(tweet):
 
 def show_status(id):
     if has_id(id):
-        print_tweet(id)
+        print_tweet(tweets.find_one(id)['tweet'])
     else:
-        tweet = {}
-        tweet['tweet'] = api.get_status(id=id)
-        print_tweet(tweet=tweet)
+        t = api.get_status(id=id, tweet_mode='extended')
+        t = assign_text_to_full_text(t)
+        print_tweet(t)
 
 def init(_genre):
     # load setting file
@@ -955,25 +1017,39 @@ infos = None
 if __name__ == '__main__':
     command_choices = [
         'update_themes',
+        'save_themes_yaml',
         'save_tweet',
         'update_users',
         'make_chart',
         'generate_rank_html',
         'check_new_ignore_user_list',
+        'update_labels_all',
     ]
     parser = argparse.ArgumentParser()
     parser.add_argument('genre')
     parser.add_argument('command', choices=command_choices)
+    parser.add_argument('--ids', nargs='+')
+    parser.add_argument('--screen_names', nargs='+')
     args = parser.parse_args()
 
     init(args.genre)
     
     if args.command == 'update_themes':
         update_themes()
+    elif args.command == 'save_themes_yaml':
+        save_themes_yaml()
     elif args.command == 'save_tweet':
-        save_tweet()
+        if args.ids:
+            ids = [id.split('/')[-1] for id in args.ids]
+            save_tweet(ids=ids)
+        if args.screen_names:
+            save_tweet(screen_names=args.screen_names)
+        else:
+            save_tweet()
     elif args.command == 'update_users':
         update_users()
+    elif args.command == 'update_labels_all':
+        update_labels_all()
     elif args.command == 'make_chart':
         make_chart()
     elif args.command == 'generate_rank_html':
