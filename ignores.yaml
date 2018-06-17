@@ -13,9 +13,6 @@ ignore_user: [real_time_words, school_neta, athetoy, to1jp, yuzugoma621, yseiiii
   yuzugoma621, 623444202, cure_advance, 375515688, niratamasan5, 764100704663277569,
   koufuku_q, 765556115576807424, Alice_Yotsuba_, 765302469094060032, kuroneko39desu,
   719216488771493888, Falconia260220, precureaikatsu2, Curebeat_waon, kouta24karut,
-  2920854601, Ko_Suke_poke2, 781119732384538627, mmm0698, 517825908, nana_chi5541,
-  crazypierrot_00, machiiya, 748192804967317505, asayaer, 806510940464168961, Ami_Chan_hkt,
-  3322743962, poo_mame, 2839838846, nau_125, 846695852944982016, tendonya_tenya, 1159270470,
-  amaike_soraike, 3036672547, picwanpi070]
+  2920854601]
 ignore_word: [【RT\d+FA\d+】, ツイート/分, \bRT\b, 話題のワード, 【To-1]
 white_user: [mgmg_sun, MTT_TV, snmrsk, mito_kazu]
