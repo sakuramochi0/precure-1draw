@@ -3,7 +3,7 @@ precure:
   credentials: 'precure/.credentials'
   # directory
   img_dir: 'precure/img/'
-  static_dirs: ['precure/static/', 'precure/static-dev/']
+  static_dirs: 'precure/'
   # setting files
   themes: 'precure/themes.yaml'
   ignores: 'ignores.yaml'
@@ -14,10 +14,10 @@ precure:
   # constants
   hash_tag: 'プリキュア版深夜の真剣お絵描き60分一本勝負'
   togetter: True
-  account: 'precure_1draw'
+  account: 'precure_1draw_2'
   rt_account: 'precure1draw_rt'
-  theme_regex: "(?:“|”|'|\")(.+?)(?:“|”|'|\")"
-  start_time: '23:00'
+  theme_regex: '[“”''"](.+?)[“”''"]'
+  start_time: '22:00'
 
 pripara:
   # secret
