@@ -16,7 +16,7 @@ import base64
 import argparse
 
 from pprint import pprint
-from pymongo.mongo_client import MongoClient
+from get_mongo_client import get_mongo_client
 import pytz
 import yaml
 from dateutil.parser import parse
@@ -24,9 +24,9 @@ import simplejson as json
 import requests
 from bs4 import BeautifulSoup
 from PIL import Image
-# import matplotlib.pyplot as plt
-# from matplotlib.font_manager import FontProperties
-# import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.font_manager import FontProperties
+import numpy as np
 from googleapiclient.discovery import build
 from get_tweepy import *
 
@@ -40,8 +40,7 @@ def save_tweet(must_retweet=True, ids=None, screen_names=None):
             Gets tweets of the ids not tag search results.
     """
     if ids:
-        ts = api.statuses_lookup(ids, tweet_mode='extended')
-        ts = list(map(assign_text_to_full_text, ts))
+        ts = api.statuses_lookup(ids)
     elif screen_names:
         ts = []
         for sn in screen_names:
@@ -72,8 +71,7 @@ def is_right_tweet(t):
     """
     Check whether the tweet is to be recorded to database and retweeted.
     """
-    return not has_id(t.id) \
-        and is_not_spam(t)
+    return not has_id(t.id) and is_not_spam(t)
             
 def record(t):
     """
@@ -81,7 +79,7 @@ def record(t):
     """
     if not has_id(t.id):
         doc = make_doc(t)
-        tweets.insert(doc)
+        tweets.insert_one(doc)
 
 def retweet(t):
     """
@@ -95,17 +93,17 @@ def retweet(t):
             id = t.id
         else:
             raise
-    tweets.update({'_id': t.id},
-                  {'$set': {
-                      'meta.retweeted': True,
-                      'meta.retweet_id': res.id,
-                  }})
+    tweets.update_one({'_id': t.id},
+                      {'$set': {
+                          'meta.retweeted': True,
+                          'meta.retweet_id': id,
+                      }})
 
 def make_doc(t):
     """
     Make MongoDB doc object from the tweet.
     """
-    time = parse(t._json['created_at']).astimezone()
+    time = parse(t._json['created_at']).astimezone(pytz.timezone('Asia/Tokyo'))
     doc = {
         '_id': t.id,
         'meta': {
@@ -214,7 +212,7 @@ def retweet_and_record(tweet=False, id=False, retweet=True, fetch=True, exceptio
     else:
         new = False
         if tweet:
-            tweets.update({'_id': id}, {'$set': {'tweet': tweet}}, True) # update
+            tweets.update_one({'_id': id}, {'$set': {'tweet': tweet}}, True)
         tweet = get_tweets('_id', id)[0]
 
     # excluding filters
@@ -228,20 +226,11 @@ def retweet_and_record(tweet=False, id=False, retweet=True, fetch=True, exceptio
 
 def including_hash_tag(t):
     """
-    Check if the tweet includes similar hash tag.
+    Check if the tweet includes the hashtag.
     """
-    # 1. if any similar hash_tags in tweet['entities']['hashtags']
     if 'hashtags' in t.entities: # tweet has hashtags data
-        tweet_tags = t.entities['hashtags']
-        for tweet_tag in tweet_tags:
-            if difflib.get_close_matches(tweet_tag['text'], [setting['hash_tag']]):
-                return True
-    # 2. or if any similar hash_tags in the text
-    for match in re.finditer('深夜の', t.text):
-        tweet_tag = t.text[match.start()-6:match.start()+16]
-        if difflib.get_close_matches(tweet_tag, [setting['hash_tag']]):
+        if any(filter(lambda tag: tag['text'] == setting['hash_tag'], t.entities['hashtags'])):
             return True
-    # otherwise, not including any hash_tag
     print('no including hash_tag')
     return False
 
@@ -262,7 +251,6 @@ def is_not_spam(t):
     # if official retweet
     elif t.entities['user_mentions']:
         spam = 'Including user mentions:'
-        return False
     # if mention
     elif 'retweeted_status' in t.entities:
         spam = 'Official retweet:'
@@ -277,24 +265,24 @@ def is_not_spam(t):
     elif t.user.id in ignores['ignore_user'] or t.user.screen_name in ignores['ignore_user']:
         spam = 'Hit ignore_user "{}":'.format(t.user.screen_name)
     # not in white list users
-    elif not t.user.screen_name in ignores['white_user'] or t.user.id in ignores['white_user']:
+    elif (t.user.screen_name not in ignores['white_user']) \
+         and (t.user.id not in  ignores['white_user']):
         # if recently created account
         if t.user.created_at > datetime.datetime.now() - datetime.timedelta(weeks=1):
             spam = 'Hit too recently created:'
         # if unsafe images
-        elif tweets.find({'tweet.user.screen_name': t.user.screen_name}).count() == 0 \
-             and is_unsafe_image(t):
-            add_ignore_users(t.user.id)
-            cancel_user_retweet(t.user.id)
-            spam = 'Hit unsafe image:'
+        # elif tweets.find({'tweet.user.id': t.user.id}).count() == 0 \
+        #      and is_unsafe_image(t):
+        #     add_ignore_users(t.user.id)
+        #     cancel_user_retweet(t.user.id)
+        #     spam = 'Hit unsafe image:'
     # if including ignore_word
     else:
         for word in ignores['ignore_word']:
             if re.search(word, t.text): 
                 spam += 'Hit ignore_word "{}":'.format(word)
     if spam:
-        print('-' * 16)
-        print(spam)
+        print('[is_not_spam()] hit spam by reason: {reason}'.format(reason=spam))
         print_tweet(t)
         return False
     else:
@@ -385,7 +373,7 @@ def is_unsafe_image(t):
 
     # The tweet has official images
     if getattr(t, 'extended_entities', False) and 'media' in t.extended_entities:
-        urls = [media['media_url'] for media in t.extended_entities['media']]
+        urls = [media['media_url_https'] for media in t.extended_entities['media']]
     else:
         # if not images, pass the check
         return False
@@ -424,17 +412,17 @@ def is_unsafe_image(t):
 
 def store_image(id):
     doc = tweets.find_one(id)
-    if doc['meta']['imgs']:
-        return
     tweet = doc['tweet']
     urls = []
     if 'extended_entities' in tweet \
-       and 'media' in tweet['extended_entities']: # tweet has official image
+       and 'media' in tweet['extended_entities']:
+        # if tweet has official image
         for url in tweet['extended_entities']['media']:
-            urls.append((url['media_url'] + ':orig', url['expanded_url']))
-    elif 'media' in tweet['entities']: # tweet has official image
+            urls.append((url['media_url_https'] + ':orig', url['expanded_url']))
+    elif 'media' in tweet['entities']:
+        # if tweet has official image
         for url in tweet['entities']['media']:
-            urls.append((url['media_url'] + ':orig', url['expanded_url']))
+            urls.append((url['media_url_https'] + ':orig', url['expanded_url']))
     else:
         for url in tweet['entities']['urls']:
             urls.append(url['expanded_url'])
@@ -445,24 +433,29 @@ def store_image(id):
         if any(['twimg.com' in x for x in url]):
             (img_url, url) = url
         elif 'twitpic.com' in url:
-            soup = BeautifulSoup(requests.get(url).text)
-            img_url = soup.select('#media-main img')[0]['src']
+            soup = BeautifulSoup(requests.get(url).text, 'lxml')
+            img = soup.select('#media-main img')
+            if not img:
+                img_url = False
+            else:
+                img_url = img[0]['src']
+            
         elif 'photozou.jp' in url:
-            soup = BeautifulSoup(requests.get(url).text)
+            soup = BeautifulSoup(requests.get(url).text, 'lxml')
             img_url = soup(itemprop='image')[0]['src']
         elif 'p.twipple.jp' in url:
             img_url = url.replace('p.twipple.jp/', 'p.twpl.jp/show/orig/')
         elif 'yfrog.com' in url:
             url = url.replace('yfrog.com', 'twitter.yfrog.com')
             r = requests.get(url)
-            soup = BeautifulSoup(r.text)
+            soup = BeautifulSoup(r.text, 'lxml')
             url = soup(id='continue-link')[0].a['href']
             r = requests.get(url)
-            soup = BeautifulSoup(r.text)
+            soup = BeautifulSoup(r.text, 'lxml')
             img_url = soup.select('.main-image a')[0]['href']
         elif 'pixiv' in url:
             headers = {'referer': 'http://www.pixiv.net/'}
-            soup = BeautifulSoup(requests.get(url).text)
+            soup = BeautifulSoup(requests.get(url).text, 'lxml')
             img_url = soup('img')[1]['src']
         elif 'togetter.com' in url:
             img_url  = False
@@ -470,39 +463,18 @@ def store_image(id):
             img_url = url
         elif re.search(r'twitter.com/.+?/status/.+?/photo', url):
             # check if the photo is animated gif
-            soup = BeautifulSoup(requests.get(url).text)
+            soup = BeautifulSoup(requests.get(url).text, 'lxml')
             img_url = soup(class_='animated-gif-thumbnail')[0]['src']
             if not img_url:
                 img_url = False
         else:
             img_url = False
 
-        if img_url:
-            time.sleep(0.5)
-            img = requests.get(img_url, headers=headers).content
-            
-            # guess filename & extenstion
-            # In [62]: re.search(r'(.+\.)(jpeg|jpg|png|gif)(.*)$', 'sample.png?extra').groups()
-            # Out[62]: ('sample.', 'png', '?extra')
-            # In [63]: re.search(r'(.+\.)(jpeg|jpg|png|gif)(.*)$', 'sample.png').groups()
-            # Out[63]: ('sample.', 'png', '')
- 
-            match = re.search(r'(\.(jpeg|jpg|png|gif))', img_url)
-            if match:
-                filename = ''.join(re.search(r'(.+\.)(jpeg|jpg|png|gif)(.*)$',
-                                             os.path.basename(img_url)).group(1,2))
-            else:
-                ext = Image.open(BytesIO(img)).format.lower()
-                filename = os.path.basename(img_url) + '.' + ext
-
-        else:
-            filename = False
-            print('No image exists.')
-
-        imgs.append({'url': url, 'img_url': img_url, 'filename': filename})
+        imgs.append({'url': url, 'img_url': img_url})
 
     # set imgs after save all the imgs loop
-    tweets.update({'_id': id}, {'$set': {'meta.imgs': imgs}})
+    tweets.update_one({'_id': id}, {'$set': {'meta.imgs': imgs}})
+    return imgs
     
 def remove_ignore_tweets():
     with open(setting['ignores']) as f:
@@ -511,7 +483,7 @@ def remove_ignore_tweets():
         p = re.compile('.*' + str(user) +'.*')
         for i in tweets.find({'$or': [{'tweet.user.screen_name': {'$regex': p}}, {'tweet.user.id': {'$regex': p}}]}):
             print(i['tweet']['user']['screen_name'])
-        tweets.remove({'$or': [{'tweet.user.screen_name': p}, {'tweet.user.id': p}]}, multi=True)
+        tweets.delete_one({'$or': [{'tweet.user.screen_name': p}, {'tweet.user.id': p}]}, multi=True)
 
 def make_symlinks_to_img_dir():
     for tweet in get_tweets():
@@ -522,7 +494,7 @@ def make_symlinks_to_img_dir():
 
 # database
 def set_value(id, key, val):
-    tweets.update({'_id': id}, {'$set': {key: val}}, True)
+    tweets.update_one({'_id': id}, {'$set': {key: val}}, True)
 
 def has_id(id):
     return bool(tweets.find({'_id': id}).count())
@@ -552,6 +524,7 @@ def print_tweet(t):
         id=t['id'],
     )
 
+    print('-' * 8)
     print(t['created_at'], '/ ♡ {} ↻ {} / {}'.format(
         t['favorite_count'],
         t['retweet_count'],
@@ -559,7 +532,6 @@ def print_tweet(t):
     ))
     print('{}(@{})'.format(t['user']['name'], t['user']['screen_name']))
     print(t['text'])
-    print('-' * 8)
 
 def update_date(daily=False, date=''):
     '''
@@ -576,12 +548,20 @@ def update_date(daily=False, date=''):
     # add daily tweets to the left of ques
     if daily:
         ques = deque([])
-        for i in tweets.find({'meta.date': get_date(), 'meta.removed': False, 'meta.deny_collection': False}).sort([('_id', -1)]):
+        for i in tweets.find({
+                'meta.date': get_date(),
+                'meta.removed': False,
+                'meta.deny_collection': False,
+        }).sort([('_id', -1)]):
             ques.appendleft(i['_id'])
     # add the date tweets to the left of ques
     elif date:
         ques = deque([])
-        for i in tweets.find({'meta.date': date, 'meta.removed': False, 'meta.deny_collection': False}).sort([('_id', -1)]):
+        for i in tweets.find({
+                'meta.date': date,
+                'meta.removed': False,
+                'meta.deny_collection': False,
+        }).sort([('_id', -1)]):
             ques.appendleft(i['_id'])
     # load que file
     else:
@@ -590,7 +570,10 @@ def update_date(daily=False, date=''):
         
     # load tweets if there is no que
     if not ques:
-        for i in tweets.find({'meta.removed': False, 'meta.deny_collection': False}).sort([('_id', -1)]):
+        for i in tweets.find({
+                'meta.removed': False,
+                'meta.deny_collection': False,
+        }).sort([('_id', -1)]):
             ques.append(i['_id'])
     
     # update tweets while api remaining
@@ -641,7 +624,7 @@ def save_themes_yaml():
         themes_yaml = yaml.load(f)
         print(themes_yaml)
     for theme in themes_yaml:
-        themes.update({'date': theme['date']}, {'$set': theme}, True)
+        themes.update_one({'date': theme['date']}, {'$set': theme}, True)
 
 def write_themes_yaml():
     with open(setting['themes'], 'w') as f:
@@ -654,15 +637,21 @@ def update_themes():
     and count tweets of the date in the database.
     '''
     ts = api.user_timeline(screen_name=setting['account'], count=100, tweet_mode='extended')
-    ts = map(assign_text_to_full_text, ts)
+    ts = map(assign_text_to_full_text, reversed(ts))
 
     # update theme and togetter
     for t in ts:
         date = get_date(parse(t._json['created_at']).astimezone())
+        print_tweet(t)
+
+        # replace newline with space for theme matching
+        t.text = t.text.replace('\n', ' ')
 
         # insert new theme of the day
         if not themes.find({'date': date}).count():
             match = re.findall(setting['theme_regex'], t.text)
+            print('Date:', date)
+            print('Found a new theme:', match)
 
             if match:
                 theme = {}
@@ -714,7 +703,7 @@ def update_themes():
                     theme['theme'] = re.sub('\(.*アンケート.*\)', '', theme['theme'])
                     
                 # update database
-                themes.update({'date': date}, {'$set': theme}, True)
+                themes.update_one({'date': date}, {'$set': theme}, True)
 
                 # retweet a official theme tweet
                 #t.retweet()
@@ -725,20 +714,38 @@ def update_themes():
             if non_togetter_tweets.count():
                 if t.entities['urls'] and 'togetter.com/li/' in t.entities['urls'][0]['expanded_url']:
                     togetter = t.entities['urls'][0]['expanded_url']
-                    themes.update({'date': date}, {'$set': {'togetter': togetter}}, True)
+                    themes.update_one({'date': date}, {'$set': {'togetter': togetter}}, True)
             
     # count event number and work number
     for num, theme in enumerate(themes.find().sort('date')):
-        work_num = tweets.find({'meta.date': theme['date'], 'meta.removed': False, 'meta.deny_collection': False}).count()
-        themes.update({'date': theme['date']}, {'$set': {'num': num, 'work_num': work_num}}, True)
+        work_num = tweets.find({
+            'meta.date': theme['date'],
+            'meta.removed': False,
+            'meta.deny_collection': False
+        }).count()
+
+        # Reset count for @precure_1draw_2
+        if args.genre == 'precure' and theme['date'] and \
+           theme['date'] >= parse('2017/1/14'):
+            num -= 1000
+        
+        themes.update_one({'date': theme['date']},
+                          {'$set': {'num': num, 'work_num': work_num}},
+                          upsert=True)
 
     # count user number
-    for date in themes.distinct('date'):
+    for i, date in enumerate(reversed(themes.distinct('date'))):
+        if i > 20:
+            break
         if not date:
-            themes.update({'date': date}, {'$set': {'user_num': 0}})
+            themes.update_one({'date': date}, {'$set': {'user_num': 0}})
         else:
-            user_num = len(tweets.find({'meta.date': {'$lte': date}, 'meta.deny_collection': False, 'meta.removed': False}).distinct('tweet.user.id'))
-            themes.update({'date': date}, {'$set': {'user_num': user_num}}, True)
+            user_num = len(tweets.find({
+                'meta.date': {'$lte': date},
+                'meta.deny_collection': False,
+                'meta.removed': False
+            }).distinct('tweet.user.id'))
+            themes.update_one({'date': date}, {'$set': {'user_num': user_num}}, True)
 
     write_themes_yaml()
 
@@ -750,7 +757,7 @@ def update_users():
             '$not': re.compile(r'^{}$'.format(setting['account'][0])),
         },
     }).distinct('tweet.user.screen_name')
-    users.remove()
+    users.delete_many({})
     for user_screen_name in user_screen_names:
         # get the latest tweet
         tweet = tweets.find(
@@ -779,7 +786,7 @@ def update_infos():
         for k, v in info.items():
             info_dict[k] = v
         print(info_dict)
-        infos.update({'id': id}, info_dict, True)
+        infos.update_one({'id': id}, info_dict, True)
 
 def get_user_work_number(id):
     '''Return the number of the id tweet work of the user.'''
@@ -867,20 +874,20 @@ def make_chart():
     ax1 = plt.axes()
     ax2 = ax1.twinx()
      
-    ax1.plot(days, user_nums, '.-', color='lightsteelblue', linewidth=2)
-    ax2.plot(days, nums, '.-', color='palevioletred', linewidth=2)
+    ax1.plot(days, user_nums, '-', color='lightsteelblue', linewidth=1)
+    ax2.plot(days, nums, '-', color='palevioletred', linewidth=1)
 
     fig.autofmt_xdate()
 
     # set limit
-    ax1.set_xlim(0, max(days) + 1)
+    ax1.set_xlim(0, max(days) + 10)
     ax1.set_ylim(0, max(user_nums) + 30)
     ax2.set_ylim(0, max(nums) + 15)
 
     # set locator
-    ax1.xaxis.set_major_locator(plt.MultipleLocator(25))
-    ax1.yaxis.set_major_locator(plt.MultipleLocator(100))
-    ax2.xaxis.set_major_locator(plt.MultipleLocator(25))
+    ax1.xaxis.set_major_locator(plt.MultipleLocator(200))
+    ax1.yaxis.set_major_locator(plt.MultipleLocator(200))
+    ax2.xaxis.set_major_locator(plt.MultipleLocator(100))
     ax2.yaxis.set_major_locator(plt.MultipleLocator(25))
 
     # set grid
@@ -890,7 +897,7 @@ def make_chart():
     fp = FontProperties(fname='Hiragino Sans GB W3.otf')
     ax1.set_xlabel('回数', fontproperties=fp)
     ax1.set_ylabel('累計参加者数', fontproperties=fp)
-    ax2.set_ylabel('作品数', fontproperties=fp)
+    ax2.set_ylabel('作品数/回', fontproperties=fp)
      
     # legend
     p1 = plt.Rectangle((0, 0), 1, 1, fc="lightsteelblue", ec='lightsteelblue')
@@ -899,16 +906,14 @@ def make_chart():
 
      
     #plt.title('作品数の変化', fontproperties=fp)
-    for static_dir in setting['static_dirs']:
-        plt.savefig(static_dir + 'chart.svg')
+    plt.savefig(setting['static_dirs'] + 'chart.svg')
 
     # en
     ax1.set_xlabel('#', fontproperties=fp)
     ax1.set_ylabel('Total perticipants')
     ax2.set_ylabel('Works')
     ax1.legend([p1, p2], ['Total perticipants', 'Works'], loc='upper left')
-    for static_dir in setting['static_dirs']:
-        plt.savefig(static_dir + 'chart-en.svg')
+    plt.savefig(setting['static_dirs'] + 'chart-en.svg')
 
 def generate_rank_html():
     '''Generate user rank pages.'''
@@ -998,10 +1003,10 @@ def init(_genre):
         key = f.read().strip()
     vision = build('vision', 'v1', developerKey=key)
     
-    tweets = MongoClient()[genre + '_1draw_collections']['tweets']
-    themes = MongoClient()[genre + '_1draw_collections']['themes']
-    users = MongoClient()[genre + '_1draw_collections']['users']
-    infos = MongoClient()[genre + '_1draw_collections']['infos']
+    tweets = get_mongo_client()[genre + '_1draw_collections']['tweets']
+    themes = get_mongo_client()[genre + '_1draw_collections']['themes']
+    users = get_mongo_client()[genre + '_1draw_collections']['users']
+    infos = get_mongo_client()[genre + '_1draw_collections']['infos']
 
 # Define global variable
 genre = None
@@ -1042,7 +1047,7 @@ if __name__ == '__main__':
         if args.ids:
             ids = [id.split('/')[-1] for id in args.ids]
             save_tweet(ids=ids)
-        if args.screen_names:
+        elif args.screen_names:
             save_tweet(screen_names=args.screen_names)
         else:
             save_tweet()
