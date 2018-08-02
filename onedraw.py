@@ -30,12 +30,12 @@ import numpy as np
 from googleapiclient.discovery import build
 from get_tweepy import *
 
-def save_tweet(must_retweet=True, ids=None, screen_names=None):
+def save_tweet(no_retweet=False, ids=None, screen_names=None):
     """Retweet tweets which have the hash_tag by REST API.
 
     Args:
-        must_retweet:
-            Save the tweet but does not retweet it if False.
+        no_retweet:
+            Save the tweet but does not retweet it if True.
         ids:
             Gets tweets of the ids not tag search results.
     """
@@ -59,7 +59,7 @@ def save_tweet(must_retweet=True, ids=None, screen_names=None):
         if is_right_tweet(t):
             record(t)
             store_image(t.id)
-            if must_retweet:
+            if not no_retweet:
                 retweet(t)
 
 def assign_text_to_full_text(t):
@@ -1035,6 +1035,7 @@ if __name__ == '__main__':
     parser.add_argument('command', choices=command_choices)
     parser.add_argument('--ids', nargs='+')
     parser.add_argument('--screen_names', nargs='+')
+    parser.add_argument('--no-retweet', action='store_true')
     args = parser.parse_args()
 
     init(args.genre)
@@ -1050,7 +1051,7 @@ if __name__ == '__main__':
         elif args.screen_names:
             save_tweet(screen_names=args.screen_names)
         else:
-            save_tweet()
+            save_tweet(no_retweet=args.no_retweet)
     elif args.command == 'update_users':
         update_users()
     elif args.command == 'update_labels_all':
