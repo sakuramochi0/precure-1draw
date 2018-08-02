@@ -1,0 +1,21 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[dev-packages]
+
+[packages]
+pymongo = "*"
+pyyaml = "*"
+pytz = "*"
+py-dateutil = "*"
+simplejson = "*"
+requests = "*"
+"bs4" = "*"
+pillow = "*"
+matplotlib = "*"
+google-api-python-client = "*"
+
+[requires]
+python_version = "3.7"
